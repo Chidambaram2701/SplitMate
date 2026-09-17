@@ -28,10 +28,10 @@ const MoneyDisplay = ({
   };
 
   const sizeClasses = {
-    sm: 'text-lg',
-    md: 'text-2xl',
-    lg: 'text-4xl',
-    xl: 'text-6xl',
+    sm: 'text-sm sm:text-base',
+    md: 'text-base sm:text-lg',
+    lg: 'text-lg sm:text-xl',
+    xl: 'text-2xl sm:text-3xl',
   };
 
   const variantClasses = {

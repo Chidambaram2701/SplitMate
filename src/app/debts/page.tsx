@@ -150,12 +150,12 @@ export default function DebtsPage() {
   return (
     <div className="space-y-6 text-black pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-4 border-black pb-2">
-        <h1 className="text-3xl sm:text-4xl font-extrabold uppercase tracking-tight text-black">
+        <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-black">
           Debts & Settlements
         </h1>
-        <Button variant="brutalAccent" asChild>
+        <Button variant="brutalAccent" size="sm" asChild>
           <Link href="/debts/new">
-            <Plus size={20} />
+            <Plus size={16} />
             New Direct Debt
           </Link>
         </Button>

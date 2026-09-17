@@ -259,8 +259,8 @@ export default function CreateExpensePage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6 text-black pb-12">
       <div className="flex items-center justify-between border-b-4 border-black pb-2">
-        <h1 className="text-2xl sm:text-4xl font-extrabold uppercase tracking-tight text-black flex items-center gap-2 sm:gap-3">
-          <DollarSign size={28} className="text-black flex-shrink-0 sm:w-8 sm:h-8" />
+        <h1 className="text-xl sm:text-2xl font-extrabold uppercase tracking-tight text-black flex items-center gap-2">
+          <DollarSign size={22} className="text-black flex-shrink-0 sm:w-6 sm:h-6" />
           New Expense
         </h1>
         <Button variant="brutal" size="sm" asChild>

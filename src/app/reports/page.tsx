@@ -8,20 +8,20 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6 text-black">
       <div className="flex items-center justify-between border-b-4 border-black pb-2">
-        <h1 className="text-4xl font-extrabold uppercase tracking-tight text-black">
+        <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-black">
           Financial Reports
         </h1>
-        <Button variant="brutalAccent">
-          <Download size={20} />
+        <Button variant="brutalAccent" size="sm">
+          <Download size={16} />
           Export CSV
         </Button>
       </div>
 
       <div className="border-4 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6 space-y-6">
         <div className="flex items-center gap-3 border-b-2 border-black pb-4">
-          <BarChart3 size={32} className="text-black" />
+          <BarChart3 size={24} className="text-black" />
           <div>
-            <h2 className="text-2xl font-extrabold uppercase text-black">Monthly Expenditure Breakdown</h2>
+            <h2 className="text-base sm:text-lg font-extrabold uppercase text-black">Monthly Expenditure Breakdown</h2>
             <p className="text-xs font-bold uppercase text-gray-700">Analytics and house audit logs</p>
           </div>
         </div>

@@ -116,7 +116,7 @@ function LoginForm() {
   return (
     <div className="space-y-8 text-black">
       <div className="text-center">
-        <h1 className="text-4xl font-extrabold uppercase tracking-tighter border-b-4 border-black pb-4 text-black">
+        <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight border-b-4 border-black pb-3 text-black">
           RoommateX
         </h1>
         <p className="mt-2 text-xs font-bold uppercase tracking-widest text-gray-700">
@@ -140,7 +140,7 @@ function LoginForm() {
         )}
 
         <div>
-          <h2 className="text-2xl font-extrabold uppercase border-b-2 border-black pb-2 mb-2 text-black">
+          <h2 className="text-lg sm:text-xl font-extrabold uppercase border-b-2 border-black pb-2 mb-2 text-black">
             Login
           </h2>
           <p className="text-xs font-bold uppercase text-gray-700">

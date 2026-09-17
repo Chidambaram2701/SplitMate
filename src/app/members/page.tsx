@@ -131,12 +131,12 @@ export default function MembersPage() {
   return (
     <div className="space-y-6 text-black pb-12">
       <div className="flex items-center justify-between border-b-4 border-black pb-2">
-        <h1 className="text-4xl font-extrabold uppercase tracking-tight text-black">
+        <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-black">
           House Members
         </h1>
-        <Button variant="brutalAccent" asChild>
+        <Button variant="brutalAccent" size="sm" asChild>
           <Link href="/members/invite">
-            <Plus size={20} />
+            <Plus size={16} />
             Invite Member
           </Link>
         </Button>

@@ -199,7 +199,7 @@ export default function DashboardPage() {
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-4 border-black pb-4">
         <div>
-          <h1 className="text-4xl font-extrabold uppercase tracking-tight text-black">
+          <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-black">
             {houseName || 'House'} Terminal
           </h1>
           <p className="text-xs font-bold uppercase tracking-widest text-gray-700 mt-1 flex items-center gap-2">
@@ -207,9 +207,9 @@ export default function DashboardPage() {
             {memberCount} Active Member{memberCount === 1 ? '' : 's'}
           </p>
         </div>
-        <Button variant="brutalAccent" size="lg" asChild className="self-start sm:self-auto">
+        <Button variant="brutalAccent" size="sm" asChild className="self-start sm:self-auto">
           <Link href="/expenses/new">
-            <Plus size={20} />
+            <Plus size={16} />
             Add Expense
           </Link>
         </Button>

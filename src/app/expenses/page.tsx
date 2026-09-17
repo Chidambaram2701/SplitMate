@@ -141,36 +141,36 @@ export default function ExpensesPage() {
   return (
     <div className="space-y-6 text-black">
       <div className="flex items-center justify-between border-b-4 border-black pb-2">
-        <h1 className="text-4xl font-extrabold uppercase tracking-tight text-black">
+        <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-black">
           Expenses Ledger
         </h1>
-        <Button variant="brutalAccent" asChild>
+        <Button variant="brutalAccent" size="sm" asChild>
           <Link href="/expenses/new">
-            <Plus size={20} />
+            <Plus size={16} />
             Add Expense
           </Link>
         </Button>
       </div>
 
-      <div className="border-4 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-8">
+      <div className="border-4 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-4 sm:p-6">
         <div className="flex items-center justify-between mb-6 border-b-2 border-black pb-4">
           <div>
-            <h2 className="text-2xl font-extrabold uppercase text-black">Total House Expenses</h2>
-            <p className="text-xs uppercase font-bold text-gray-700">Cumulative record</p>
+            <h2 className="text-base sm:text-lg font-extrabold uppercase text-black">Total House Expenses</h2>
+            <p className="text-[11px] uppercase font-bold text-gray-700">Cumulative record</p>
           </div>
           <MoneyDisplay amount={totalAmount} size="lg" />
         </div>
 
         {expenses.length === 0 ? (
           <div className="py-12 text-center">
-            <div className="border-4 border-black bg-[#F5E600] p-8 inline-block shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-              <p className="font-extrabold uppercase text-xl mb-2 text-black">No Expenses Logged Yet</p>
-              <p className="text-xs font-bold uppercase text-black mb-6">
+            <div className="border-4 border-black bg-[#F5E600] p-6 inline-block shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+              <p className="font-extrabold uppercase text-base mb-2 text-black">No Expenses Logged Yet</p>
+              <p className="text-xs font-bold uppercase text-black mb-4">
                 Your house ledger is empty. Click below to add your first expense!
               </p>
-              <Button variant="brutalPrimary" asChild>
+              <Button variant="brutalPrimary" size="sm" asChild>
                 <Link href="/expenses/new">
-                  <Plus size={18} />
+                  <Plus size={16} />
                   Add First Expense
                 </Link>
               </Button>
@@ -181,15 +181,15 @@ export default function ExpensesPage() {
             {expenses.map((expense: any) => (
               <div
                 key={expense.id}
-                className="flex items-center justify-between p-4 border-2 border-black bg-white hover:bg-[#F5E600] transition-colors"
+                className="flex items-center justify-between p-3 sm:p-4 border-2 border-black bg-white hover:bg-[#F5E600] transition-colors"
               >
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 bg-black text-white flex items-center justify-center font-extrabold uppercase text-lg border-2 border-black flex-shrink-0">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 bg-black text-white flex items-center justify-center font-extrabold uppercase text-sm sm:text-base border-2 border-black flex-shrink-0">
                     E
                   </div>
                   <div>
-                    <div className="font-bold uppercase text-lg text-black">{expense.description}</div>
-                    <div className="text-xs font-bold uppercase text-gray-700 flex items-center gap-2 mt-1">
+                    <div className="font-bold uppercase text-sm sm:text-base text-black">{expense.description}</div>
+                    <div className="text-[11px] font-bold uppercase text-gray-700 flex items-center gap-2 mt-0.5">
                       <span>Paid by: {expense.paid_by?.display_name || 'Member'}</span>
                       <span>|</span>
                       <span>{new Date(expense.date).toLocaleDateString('en-IN')}</span>

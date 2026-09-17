@@ -112,11 +112,11 @@ export default function AssetsPage() {
   return (
     <div className="space-y-6 text-black">
       <div className="flex items-center justify-between border-b-4 border-black pb-2">
-        <h1 className="text-4xl font-extrabold uppercase tracking-tight text-black">
+        <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-black">
           House Assets
         </h1>
-        <Button variant="brutalAccent" onClick={() => setShowAddForm(!showAddForm)}>
-          <Plus size={20} />
+        <Button variant="brutalAccent" size="sm" onClick={() => setShowAddForm(!showAddForm)}>
+          <Plus size={16} />
           {showAddForm ? 'Close Form' : 'Add Asset'}
         </Button>
       </div>
