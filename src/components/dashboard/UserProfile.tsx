@@ -1,4 +1,4 @@
-// UserProfile Component
+// UserProfile Component - Mobile Responsive
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -32,9 +32,9 @@ export function UserProfile() {
   }, []);
 
   return (
-    <div className="flex items-center gap-2 border-2 border-black bg-white px-3 py-1.5 font-bold uppercase text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-xs tracking-wide">
-      <User size={16} className="text-black" />
-      <span className="max-w-[120px] truncate font-extrabold text-black">
+    <div className="flex items-center gap-2 border-2 border-black bg-white px-2 py-1 sm:px-3 sm:py-1.5 font-bold uppercase text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] sm:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-[11px] sm:text-xs tracking-wide flex-shrink-0">
+      <User size={14} className="text-black sm:w-4 sm:h-4 flex-shrink-0" />
+      <span className="max-w-[65px] sm:max-w-[120px] truncate font-extrabold text-black">
         {displayName || 'USER'}
       </span>
     </div>

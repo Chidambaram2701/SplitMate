@@ -1,4 +1,4 @@
-// Create Expense Page
+// Create Expense Page - Mobile Responsive
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,10 +7,11 @@ import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Check, DollarSign, Home, Plus } from 'lucide-react';
 import Link from 'next/link';
 
 interface Member {
-  id: string;
+  id: string; // user_id
   display_name: string;
 }
 
@@ -20,7 +21,9 @@ export default function CreateExpensePage() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [fetchingMembers, setFetchingMembers] = useState(true);
   const [members, setMembers] = useState<Member[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -28,35 +31,88 @@ export default function CreateExpensePage() {
   }, []);
 
   async function loadMembers() {
-    const houseId = sessionStorage.getItem('currentHouseId');
-    if (!houseId) return;
+    setFetchingMembers(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setFetchingMembers(false);
+        return;
+      }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+      let houseId = sessionStorage.getItem('currentHouseId');
+      if (!houseId) {
+        const { data: houseRows } = await supabase
+          .from('houses')
+          .select('id')
+          .limit(1);
 
-    const { data: membersData } = await supabase
-      .from('house_members')
-      .select(`
-        id,
-        profiles (display_name)
-      `)
-      .eq('house_id', houseId)
-      .eq('status', 'active');
+        if (houseRows && houseRows.length > 0) {
+          houseId = houseRows[0].id;
+          sessionStorage.setItem('currentHouseId', houseId);
+        }
+      }
 
-    if (membersData) {
-      const membersList = membersData.map((m: any) => ({
-        id: m.id,
-        display_name: m.profiles?.display_name || 'Unknown',
-      }));
-      setMembers(membersList);
-      setSelectedMembers(membersList.map((m: any) => m.id));
+      if (!houseId) {
+        const selfMember: Member = {
+          id: user.id,
+          display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || 'You',
+        };
+        setMembers([selfMember]);
+        setSelectedMembers([selfMember.id]);
+        setFetchingMembers(false);
+        return;
+      }
+
+      const { data: membersData } = await supabase
+        .from('house_members')
+        .select('user_id, role, status')
+        .eq('house_id', houseId)
+        .eq('status', 'active');
+
+      if (membersData && membersData.length > 0) {
+        const userIds = membersData.map((m: any) => m.user_id).filter(Boolean);
+
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, display_name, email')
+          .in('id', userIds);
+
+        const profileMap = new Map();
+        if (profilesData) {
+          profilesData.forEach((p: any) => profileMap.set(p.id, p));
+        }
+
+        const membersList: Member[] = membersData.map((m: any) => {
+          const prof = profileMap.get(m.user_id);
+          const isCurrentUser = m.user_id === user.id;
+
+          return {
+            id: m.user_id,
+            display_name: prof?.display_name || (isCurrentUser ? (user.user_metadata?.display_name || user.email?.split('@')[0] || 'You') : 'Roommate'),
+          };
+        });
+
+        setMembers(membersList);
+        setSelectedMembers(membersList.map((m) => m.id));
+      } else {
+        const selfMember: Member = {
+          id: user.id,
+          display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || 'You',
+        };
+        setMembers([selfMember]);
+        setSelectedMembers([selfMember.id]);
+      }
+    } catch (err) {
+      console.error('Error loading members:', err);
+    } finally {
+      setFetchingMembers(false);
     }
   }
 
   const toggleMember = (memberId: string) => {
-    setSelectedMembers(prev =>
+    setSelectedMembers((prev) =>
       prev.includes(memberId)
-        ? prev.filter(m => m !== memberId)
+        ? prev.filter((m) => m !== memberId)
         : [...prev, memberId]
     );
   };
@@ -64,72 +120,89 @@ export default function CreateExpensePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
-    const houseId = sessionStorage.getItem('currentHouseId');
-    if (!houseId) {
+    let houseId = sessionStorage.getItem('currentHouseId');
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      setError('You must be logged in to create an expense.');
       setLoading(false);
       return;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    if (!houseId) {
+      const { data: houseRows } = await supabase.from('houses').select('id').limit(1);
+      if (houseRows && houseRows.length > 0) {
+        houseId = houseRows[0].id;
+        sessionStorage.setItem('currentHouseId', houseId);
+      }
+    }
+
+    if (!houseId) {
+      setError('No active house found. Please create or select a house first.');
       setLoading(false);
       return;
     }
 
     const expenseAmount = parseFloat(amount);
     if (isNaN(expenseAmount) || expenseAmount <= 0) {
-      alert('Please enter a valid amount');
+      setError('Please enter a valid expense amount.');
       setLoading(false);
       return;
     }
 
-    // Calculate equal split
-    const splitAmount = Math.round(expenseAmount / selectedMembers.length);
+    if (selectedMembers.length === 0) {
+      setError('Please select at least one member to split this expense.');
+      setLoading(false);
+      return;
+    }
+
+    const splitAmount = parseFloat((expenseAmount / selectedMembers.length).toFixed(2));
 
     try {
-      // Insert expense
       const { data: expense, error: expenseError } = await supabase
         .from('expenses')
         .insert({
           house_id: houseId,
           paid_by: user.id,
-          description,
+          description: description.trim(),
           total_amount: expenseAmount,
           category: 'general',
-          date,
+          date: date || new Date().toISOString().split('T')[0],
         })
         .select()
         .single();
 
-      if (expenseError) throw expenseError;
+      if (expenseError) {
+        console.error('Expense insert error:', expenseError);
+        throw new Error(expenseError.message || 'Failed to save expense record.');
+      }
 
-      // Insert splits for each participant
-      for (const memberId of selectedMembers) {
+      for (const memberUserId of selectedMembers) {
         await supabase
           .from('expense_splits')
           .insert({
             expense_id: expense.id,
-            participant_id: memberId,
+            participant_id: memberUserId,
             amount: splitAmount,
-            percentage: (splitAmount / expenseAmount) * 100,
-            settled: false,
+            percentage: parseFloat(((splitAmount / expenseAmount) * 100).toFixed(2)),
+            settled: memberUserId === user.id,
           });
       }
 
-      // Create debts if someone other than the payer is selected
-      for (const memberId of selectedMembers) {
-        if (memberId !== user.id) {
+      for (const memberUserId of selectedMembers) {
+        if (memberUserId !== user.id) {
           await supabase
             .from('debts')
             .insert({
               house_id: houseId,
-              debtor_id: memberId,
+              debtor_id: memberUserId,
               creditor_id: user.id,
               original_amount: splitAmount,
               remaining_amount: splitAmount,
               due_date: null,
-              description: `Split from ${description}`,
+              description: `Share of ${description.trim()}`,
               status: 'pending',
             });
         }
@@ -137,46 +210,55 @@ export default function CreateExpensePage() {
 
       router.push('/expenses');
       router.refresh();
-    } catch (error) {
-      console.error('Error creating expense:', error);
-      alert('Error creating expense. Please try again.');
+    } catch (err: any) {
+      console.error('Error saving expense:', err);
+      setError(err.message || 'Failed to save expense. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const splitAmount = amount ? Math.round(parseFloat(amount) / selectedMembers.length) : 0;
+  const splitAmount = amount && selectedMembers.length > 0
+    ? (parseFloat(amount) / selectedMembers.length).toFixed(2)
+    : '0';
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-4xl font-bold uppercase border-b-4 border-black pb-2">
+    <div className="max-w-3xl mx-auto space-y-6 text-black pb-12">
+      <div className="flex items-center justify-between border-b-4 border-black pb-2">
+        <h1 className="text-2xl sm:text-4xl font-extrabold uppercase tracking-tight text-black flex items-center gap-2 sm:gap-3">
+          <DollarSign size={28} className="text-black flex-shrink-0 sm:w-8 sm:h-8" />
           New Expense
         </h1>
-        <Button variant="brutal" asChild>
+        <Button variant="brutal" size="sm" asChild>
           <Link href="/expenses">Cancel</Link>
         </Button>
       </div>
 
-      <div className="border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-8">
+      <div className="border-4 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-4 sm:p-8">
+        {error && (
+          <div className="mb-6 bg-red-100 border-4 border-red-600 p-4 text-red-800 font-extrabold uppercase text-xs">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Expense Details */}
           <div className="space-y-4">
             <div>
               <Label htmlFor="description" required>
-                Expense Name
+                Expense Name / Reason
               </Label>
               <Input
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="e.g., Washing Machine, Groceries"
+                placeholder="e.g. Groceries, Electricity Bill"
                 required
                 disabled={loading}
+                className="mt-1"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="amount" required>
                   Total Amount (₹)
@@ -184,19 +266,20 @@ export default function CreateExpensePage() {
                 <Input
                   id="amount"
                   type="number"
-                  min="0"
-                  step="1"
+                  min="1"
+                  step="any"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0"
+                  placeholder="e.g. 1200"
                   required
                   disabled={loading}
+                  className="mt-1"
                 />
               </div>
 
               <div>
                 <Label htmlFor="date" required>
-                  Date
+                  Expense Date
                 </Label>
                 <Input
                   id="date"
@@ -205,96 +288,85 @@ export default function CreateExpensePage() {
                   onChange={(e) => setDate(e.target.value)}
                   required
                   disabled={loading}
+                  className="mt-1"
                 />
               </div>
             </div>
           </div>
 
-          {/* Participants Selector */}
           <div className="space-y-4 border-t-2 border-black pt-6">
-            <div className="flex items-center justify-between">
-              <Label required>
-                Who is this for?
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <Label required className="text-sm sm:text-base font-extrabold">
+                Who is this expense for?
               </Label>
-              <span className="font-mono font-bold text-sm">
+              <span className="font-mono font-bold text-xs bg-[#F5E600] px-2 py-1 border border-black self-start sm:self-auto">
                 {selectedMembers.length} member{selectedMembers.length !== 1 && 's'} selected
               </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {members.map((member: any) => {
-                const isSelected = selectedMembers.includes(member.id);
-                return (
-                  <button
-                    key={member.id}
-                    type="button"
-                    onClick={() => toggleMember(member.id)}
-                    className={`
-                      flex items-center gap-3 p-4 border-2 text-left transition-all
-                      ${isSelected
-                        ? 'border-black bg-[#F5E600] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
-                        : 'border-black hover:border-[#F5E600]'
-                      }
-                    `}
-                  >
-                    <div className={`
-                      flex items-center justify-center w-8 h-8 rounded-none font-bold uppercase
-                      ${isSelected ? 'bg-black text-white' : 'bg-white text-black'}
-                    `}>
-                      {member.display_name?.[0] || '?'}
-                    </div>
-                    <div className="font-bold uppercase text-sm">{member.display_name}</div>
-                  </button>
-                );
-              })}
-            </div>
+            {fetchingMembers ? (
+              <div className="p-4 border-2 border-black bg-gray-100 font-bold uppercase text-xs flex items-center gap-2">
+                <div className="w-4 h-4 bg-black animate-spin" />
+                Loading house members...
+              </div>
+            ) : members.length === 0 ? (
+              <div className="p-4 border-2 border-black bg-yellow-100 text-black font-bold uppercase text-xs">
+                No members found. Adding you as default participant.
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {members.map((member) => {
+                  const isSelected = selectedMembers.includes(member.id);
+                  return (
+                    <button
+                      key={member.id}
+                      type="button"
+                      onClick={() => toggleMember(member.id)}
+                      className={`
+                        flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 border-2 text-left transition-all cursor-pointer
+                        ${
+                          isSelected
+                            ? 'border-black bg-[#F5E600] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]'
+                            : 'border-black bg-white hover:bg-gray-100'
+                        }
+                      `}
+                    >
+                      <div
+                        className={`
+                        flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-none font-extrabold uppercase border border-black flex-shrink-0 text-xs sm:text-sm
+                        ${isSelected ? 'bg-black text-white' : 'bg-white text-black'}
+                      `}
+                      >
+                        {isSelected ? <Check size={14} /> : member.display_name?.[0] || 'M'}
+                      </div>
+                      <div className="font-extrabold uppercase text-[11px] sm:text-xs truncate">{member.display_name}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          {/* Split Calculator */}
           {amount && selectedMembers.length > 0 && (
-            <div className="space-y-4 border-t-2 border-black pt-6">
-              <Label>Split Calculator</Label>
-              <div className="bg-[#F4F1EA] border-2 border-black p-6">
-                <div className="text-center space-y-4">
-                  <div>
-                    <span className="text-sm uppercase text-gray-600 block mb-2">
-                      Total Amount
-                    </span>
-                    <span className="font-mono font-bold text-3xl">
-                      ₹{parseFloat(amount).toLocaleString('en-IN')}
-                    </span>
-                  </div>
-                  <div className="border-t-2 border-black pt-4">
-                    <span className="text-sm uppercase text-gray-600 block mb-2">
-                      {selectedMembers.length} Member{selectedMembers.length !== 1 && 's'}
-                    </span>
-                    <div className="font-mono font-bold text-xl">
-                      ₹{parseFloat(amount).toLocaleString('en-IN')} ÷ {selectedMembers.length}
-                    </div>
-                  </div>
-                  <div className="border-t-2 border-black pt-4">
-                    <span className="text-sm uppercase text-gray-600 block mb-2">
-                      Each pays
-                    </span>
-                    <span className="font-mono font-bold text-3xl text-green-600">
-                      ₹{splitAmount.toLocaleString('en-IN')}
-                    </span>
-                  </div>
-                </div>
-              </div>
+            <div className="border-2 border-black bg-[#F4F1EA] p-3 sm:p-4 text-center font-mono font-bold text-xs sm:text-sm">
+              <span className="uppercase text-gray-700 block text-[10px] sm:text-xs mb-1">Equal Split Share:</span>
+              <span className="text-sm sm:text-xl text-black">
+                ₹{amount} ÷ {selectedMembers.length} = <span className="text-green-700 font-extrabold">₹{splitAmount} / member</span>
+              </span>
             </div>
           )}
 
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t-2 border-black">
             <Button
               type="submit"
-              variant="brutalPrimary"
+              variant="brutalAccent"
               fullWidth
-              disabled={loading || !description || !amount || selectedMembers.length === 0}
+              disabled={loading || !description.trim() || !amount || selectedMembers.length === 0}
+              className="py-3 sm:py-4 text-sm sm:text-base order-1 sm:order-1"
             >
-              {loading ? 'Saving...' : 'Save Expense'}
+              {loading ? 'Saving Expense...' : 'Save Expense'}
             </Button>
-            <Button variant="brutal" asChild>
+            <Button variant="brutal" asChild disabled={loading} className="order-2 sm:order-2">
               <Link href="/expenses">Cancel</Link>
             </Button>
           </div>
