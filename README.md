@@ -1,36 +1,161 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RoommateX - House Financial Platform
 
-## Getting Started
+A brutalist, production-quality full-stack web application for managing shared house finances for college students.
 
-First, run the development server:
+## Features
+
+- **Multi-house support** - Manage multiple houses with strict data isolation
+- **Expense tracking** - Track shared and personal expenses
+- **Debt management** - Track who owes whom with partial payments
+- **Asset management** - Track house assets and ownership
+- **Member management** - Invite, manage, and handle member exits
+- **Settlements** - Simplify complex debt settlements
+- **Automated reminders** - Get notified about upcoming payments
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Database**: Supabase PostgreSQL
+- **Authentication**: Supabase Auth
+- **UI**: Custom Brutalist Design System
+- **Deployment**: Vercel
+
+## Setup
+
+### 1. Clone and Install
+
+```bash
+npm install
+```
+
+### 2. Create Supabase Project
+
+1. Go to [Supabase](https://supabase.com)
+2. Create a new project
+3. Copy the project URL and anon key from Project Settings > API
+
+### 3. Set Environment Variables
+
+Create a `.env.local` file:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+```
+
+### 4. Run Database Migrations
+
+Execute the migration file at `supabase/migrations/0001_initial_schema.sql` in your Supabase SQL Editor.
+
+### 5. Start Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The application will be available at `http://localhost:3000`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Brutalist Design
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+RoommateX uses a bold, functional design style inspired by:
 
-## Learn More
+- Financial terminals
+- Editorial design
+- Industrial Brutalism
 
-To learn more about Next.js, take a look at the following resources:
+Key design elements:
+- Bold high-contrast colors (black, white, yellow accents)
+- Thick borders (2-3px solid black)
+- Offset shadows for depth
+- Square corners (border-radius: 0)
+- Monospace typography for financial data
+- Bold uppercase headings
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+app/
+├── api/                    # API routes
+├── auth/                   # Auth pages (login, register)
+├── dashboard/              # Dashboard page
+├── expenses/               # Expense management
+├── debts/                  # Debt tracking
+├── assets/                 # Asset management
+├── members/                # Member management
+├── houses/                 # House management
+└── layout.tsx              # Main layout with navigation
 
-## Deploy on Vercel
+components/
+├── dashboard/              # Dashboard components
+│   ├── Sidebar.tsx
+│   ├── HouseSwitcher.tsx
+│   └── UserProfile.tsx
+├── ui/                     # Reusable UI components
+│   ├── button.tsx
+│   ├── card.tsx
+│   ├── input.tsx
+│   ├── label.tsx
+│   ├── select.tsx
+│   ├── money-display.tsx
+│   └── status-badge.tsx
+└── lib/
+    └── supabase/           # Supabase client and utilities
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+supabase/
+└── migrations/             # Database migrations
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Database Schema
+
+Main tables:
+- `profiles` - User profiles
+- `houses` - House records
+- `house_members` - House membership
+- `expenses` - Expense tracking
+- `expense_splits` - Expense participant splits
+- `debts` - Debt tracking
+- `payments` - Payment history
+- `assets` - Asset management
+- `settlements` - Debt settlements
+
+## Security
+
+- Row Level Security (RLS) on all tables
+- Strict house-level data isolation
+- Server-side validation for all financial calculations
+
+## Configuration
+
+### Supabase
+
+Configure Row Level Security (RLS) policies in the Supabase SQL Editor. The migration file includes comprehensive RLS policies.
+
+## Deployment
+
+1. Connect your repository to Vercel
+2. Add environment variables in Vercel dashboard
+3. Deploy
+
+## Development
+
+### Run TypeScript Checks
+
+```bash
+npx tsc --noEmit
+```
+
+### Run Lint
+
+```bash
+npm run lint
+```
+
+### Build
+
+```bash
+npm run build
+```
+
+## License
+
+MIT
