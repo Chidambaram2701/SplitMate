@@ -28,20 +28,20 @@ export function Sidebar() {
   };
 
   return (
-    <div className="w-72 border-r-4 border-black bg-[#F4F1EA] flex flex-col h-full text-black flex-shrink-0">
-      <div className="p-6 border-b-4 border-black bg-[#F4F1EA]">
+    <div className="w-64 border-r-4 border-black bg-[#F4F1EA] flex flex-col h-full text-black flex-shrink-0">
+      <div className="p-5 border-b-4 border-black bg-[#F4F1EA]">
         <Link href="/dashboard" className="block">
-          <h1 className="text-3xl font-extrabold uppercase tracking-tighter text-black hover:opacity-80 transition-opacity">
+          <h1 className="text-2xl font-extrabold uppercase tracking-tight text-black truncate hover:opacity-80 transition-opacity">
             RoommateX
           </h1>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-700 mt-1">
+          <p className="text-[9px] font-bold uppercase tracking-wider text-gray-700 mt-1">
             House Finance Terminal
           </p>
         </Link>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-        <div className="text-[11px] font-bold uppercase tracking-widest border-b-2 border-black pb-1 mb-3 text-black">
+      <nav className="flex-1 p-3 space-y-2 overflow-y-auto">
+        <div className="text-[10px] font-bold uppercase tracking-widest border-b-2 border-black pb-1 mb-3 text-black">
           Main Navigation
         </div>
         {navItems.map((item) => {
@@ -52,7 +52,7 @@ export function Sidebar() {
               <Button
                 variant={isActive ? 'brutalPrimary' : 'brutal'}
                 fullWidth
-                className="justify-start gap-3"
+                className="justify-start gap-2.5 px-4"
               >
                 <Icon size={18} className={isActive ? 'text-white' : 'text-black'} />
                 <span className={isActive ? 'text-white font-bold' : 'text-black font-bold'}>{item.name}</span>
@@ -61,14 +61,14 @@ export function Sidebar() {
           );
         })}
 
-        <div className="mt-6 text-[11px] font-bold uppercase tracking-widest border-b-2 border-black pb-1 mb-3 text-black">
+        <div className="mt-6 text-[10px] font-bold uppercase tracking-widest border-b-2 border-black pb-1 mb-3 text-black">
           Alerts & Activity
         </div>
         <Link href="/notifications" className="block w-full">
           <Button
             variant={pathname === '/notifications' ? 'brutalPrimary' : 'brutal'}
             fullWidth
-            className="justify-start gap-3"
+            className="justify-start gap-2.5 px-4"
           >
             <AlertTriangle size={18} className={pathname === '/notifications' ? 'text-white' : 'text-black'} />
             <span className={pathname === '/notifications' ? 'text-white font-bold' : 'text-black font-bold'}>Notifications</span>
@@ -76,8 +76,8 @@ export function Sidebar() {
         </Link>
       </nav>
 
-      {/* Raised Sign Out button with mb-12 to prevent overlap with dev indicators */}
-      <div className="p-4 border-t-4 border-black bg-[#F4F1EA] pb-10">
+      {/* Raised Sign Out button to prevent dev indicator overlap */}
+      <div className="p-3 border-t-4 border-black bg-[#F4F1EA] pb-10">
         <Button
           variant="brutalDanger"
           fullWidth

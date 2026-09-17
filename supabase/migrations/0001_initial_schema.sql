@@ -311,8 +311,11 @@ ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 -- ============================================
 -- RLS POLICIES: PROFILES
 -- ============================================
-CREATE POLICY profiles_can_view_own_profile ON profiles
-  FOR SELECT USING (auth.uid() = id);
+DROP POLICY IF EXISTS profiles_can_view_own_profile ON profiles;
+DROP POLICY IF EXISTS profiles_can_view_all ON profiles;
+
+CREATE POLICY profiles_can_view_all ON profiles
+  FOR SELECT USING (true);
 
 CREATE POLICY profiles_can_update_own_profile ON profiles
   FOR UPDATE USING (auth.uid() = id);
