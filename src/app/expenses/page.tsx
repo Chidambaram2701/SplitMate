@@ -4,50 +4,57 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { MoneyDisplay } from '@/components/ui/money-display';
-import { StatusBadge } from '@/components/ui/status-badge';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Home } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasHouse, setHasHouse] = useState(true);
 
   useEffect(() => {
     loadExpenses();
   }, []);
 
   async function loadExpenses() {
-    const houseId = sessionStorage.getItem('currentHouseId');
-    if (!houseId) return;
-
     setLoading(true);
+    try {
+      const houseId = sessionStorage.getItem('currentHouseId');
+      if (!houseId) {
+        setHasHouse(false);
+        return;
+      }
+      setHasHouse(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    const { data: expensesData, error } = await supabase
-      .from('expenses')
-      .select(`
-        id,
-        description,
-        total_amount,
-        date,
-        created_at,
-        paid_by (
-          display_name
-        )
-      `)
-      .eq('house_id', houseId)
-      .order('created_at', { ascending: false });
+      const { data: expensesData, error } = await supabase
+        .from('expenses')
+        .select(`
+          id,
+          description,
+          total_amount,
+          date,
+          created_at,
+          paid_by (
+            display_name
+          )
+        `)
+        .eq('house_id', houseId)
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error loading expenses:', error);
-    } else if (expensesData) {
-      setExpenses(expensesData);
+      if (error) {
+        console.error('Error loading expenses:', error);
+      } else if (expensesData) {
+        setExpenses(expensesData);
+      }
+    } catch (err) {
+      console.error('Failed loading expenses:', err);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   const handleDelete = async (expenseId: string) => {
@@ -66,18 +73,40 @@ export default function ExpensesPage() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-64 bg-gray-300 animate-pulse border-2 border-black" />
+        <div className="border-4 border-black bg-white p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex items-center gap-3">
+          <div className="w-5 h-5 bg-[#F5E600] animate-spin border-2 border-black" />
+          <h2 className="text-xl font-bold uppercase tracking-wider text-black">
+            Loading Expenses Ledger...
+          </h2>
+        </div>
       </div>
     );
   }
 
-  const totalAmount = expenses.reduce((sum: number, e: any) => sum + e.total_amount, 0);
+  if (!hasHouse) {
+    return (
+      <div className="max-w-2xl mx-auto my-12 border-4 border-black bg-white p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-6 text-black">
+        <div className="flex items-center gap-4 border-b-4 border-black pb-4">
+          <Home size={32} className="text-black" />
+          <h1 className="text-3xl font-extrabold uppercase">No Active House Selected</h1>
+        </div>
+        <p className="text-sm font-medium">Please select or create a house workspace to manage house expenses.</p>
+        <Button variant="brutalAccent" size="lg" asChild>
+          <Link href="/houses/new">
+            <Plus size={20} /> Create A House
+          </Link>
+        </Button>
+      </div>
+    );
+  }
+
+  const totalAmount = expenses.reduce((sum: number, e: any) => sum + Number(e.total_amount || 0), 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-4xl font-bold uppercase border-b-4 border-black pb-2">
-          Expenses
+    <div className="space-y-6 text-black">
+      <div className="flex items-center justify-between border-b-4 border-black pb-2">
+        <h1 className="text-4xl font-extrabold uppercase tracking-tight text-black">
+          Expenses Ledger
         </h1>
         <Button variant="brutalAccent" asChild>
           <Link href="/expenses/new">
@@ -87,53 +116,56 @@ export default function ExpensesPage() {
         </Button>
       </div>
 
-      <div className="border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-8">
+      <div className="border-4 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-8">
         <div className="flex items-center justify-between mb-6 border-b-2 border-black pb-4">
           <div>
-            <h2 className="text-2xl font-bold uppercase">Total Expenses</h2>
-            <p className="text-sm uppercase text-gray-600">All time ledger</p>
+            <h2 className="text-2xl font-extrabold uppercase text-black">Total House Expenses</h2>
+            <p className="text-xs uppercase font-bold text-gray-700">Cumulative record</p>
           </div>
           <MoneyDisplay amount={totalAmount} size="lg" />
         </div>
 
         {expenses.length === 0 ? (
           <div className="py-12 text-center">
-            <div className="border-2 border-black p-8 inline-block mb-4">
-              <p className="font-bold uppercase mb-2">No Expenses Yet</p>
-              <p className="text-sm uppercase text-gray-600 mb-4">
-                Your house ledger is clean. Add your first expense!
+            <div className="border-4 border-black bg-[#F5E600] p-8 inline-block shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+              <p className="font-extrabold uppercase text-xl mb-2 text-black">No Expenses Logged Yet</p>
+              <p className="text-xs font-bold uppercase text-black mb-6">
+                Your house ledger is empty. Click below to add your first expense!
               </p>
-              <Button variant="brutalAccent" asChild>
-                <Link href="/expenses/new">+ Add First Expense</Link>
+              <Button variant="brutalPrimary" asChild>
+                <Link href="/expenses/new">
+                  <Plus size={18} />
+                  Add First Expense
+                </Link>
               </Button>
             </div>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {expenses.map((expense: any) => (
               <div
                 key={expense.id}
-                className="flex items-center justify-between p-4 border-2 border-black hover:bg-[#F5E600] transition-colors"
+                className="flex items-center justify-between p-4 border-2 border-black bg-white hover:bg-[#F5E600] transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 bg-black text-white flex items-center justify-center font-bold uppercase rounded-none flex-shrink-0">
+                  <div className="h-12 w-12 bg-black text-white flex items-center justify-center font-extrabold uppercase text-lg border-2 border-black flex-shrink-0">
                     E
                   </div>
                   <div>
-                    <div className="font-bold uppercase text-lg">{expense.description}</div>
-                    <div className="text-xs uppercase text-gray-600 flex items-center gap-2 mt-1">
-                      <span>Paid by: {expense.paid_by?.display_name || 'Unknown'}</span>
-                      <span className="text-gray-400">|</span>
+                    <div className="font-bold uppercase text-lg text-black">{expense.description}</div>
+                    <div className="text-xs font-bold uppercase text-gray-700 flex items-center gap-2 mt-1">
+                      <span>Paid by: {expense.paid_by?.display_name || 'Member'}</span>
+                      <span>|</span>
                       <span>{new Date(expense.date).toLocaleDateString('en-IN')}</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <div className="font-mono font-bold text-xl">₹{expense.total_amount}</div>
-                    <div className="text-xs uppercase text-gray-600">{new Date(expense.created_at).toLocaleDateString('en-IN')}</div>
+                    <div className="font-mono font-bold text-xl text-black">₹{expense.total_amount}</div>
+                    <div className="text-xs font-bold uppercase text-gray-600">{new Date(expense.created_at).toLocaleDateString('en-IN')}</div>
                   </div>
-                  <Button variant="brutal" size="icon" onClick={() => handleDelete(expense.id)}>
+                  <Button variant="brutalDanger" size="icon" onClick={() => handleDelete(expense.id)}>
                     <Trash2 size={16} />
                   </Button>
                 </div>

@@ -1,161 +1,200 @@
-// Assets Page
+// Assets Page - Real Supabase Queries
 'use client';
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { MoneyDisplay } from '@/components/ui/money-display';
-import { StatusBadge } from '@/components/ui/status-badge';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Box, Plus, Home } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AssetsPage() {
   const [assets, setAssets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasHouse, setHasHouse] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [name, setName] = useState('');
+  const [category, setCategory] = useState('General');
+  const [value, setValue] = useState('');
 
   useEffect(() => {
     loadAssets();
   }, []);
 
   async function loadAssets() {
+    setLoading(true);
+    try {
+      const houseId = sessionStorage.getItem('currentHouseId');
+      if (!houseId) {
+        setHasHouse(false);
+        return;
+      }
+      setHasHouse(true);
+
+      const { data, error } = await supabase
+        .from('assets')
+        .select('*')
+        .eq('house_id', houseId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching assets:', error);
+      } else {
+        setAssets(data || []);
+      }
+    } catch (err) {
+      console.error('Assets load error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleAddAsset = async (e: React.FormEvent) => {
+    e.preventDefault();
     const houseId = sessionStorage.getItem('currentHouseId');
     if (!houseId) return;
 
-    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+      const { error } = await supabase
+        .from('assets')
+        .insert({
+          house_id: houseId,
+          name: name.trim(),
+          category: category.trim() || 'General',
+          estimated_value: parseFloat(value) || 0,
+        });
 
-    const { data: assetsData, error } = await supabase
-      .from('assets')
-      .select('*')
-      .eq('house_id', houseId)
-      .order('purchase_date', { ascending: false });
-
-    if (error) {
-      console.error('Error loading assets:', error);
-    } else if (assetsData) {
-      setAssets(assetsData);
-    }
-
-    setLoading(false);
-  }
-
-  const handleDelete = async (assetId: string) => {
-    if (!confirm('Are you sure you want to delete this asset?')) return;
-
-    const { error } = await supabase
-      .from('assets')
-      .delete()
-      .eq('id', assetId);
-
-    if (!error) {
-      loadAssets();
+      if (!error) {
+        setName('');
+        setValue('');
+        setShowAddForm(false);
+        loadAssets();
+      }
+    } catch (err) {
+      console.error('Error adding asset:', err);
     }
   };
-
-  const totalPurchaseValue = assets.reduce((sum: number, a: any) => sum + a.purchase_price, 0);
-  const totalCurrentValue = assets.reduce((sum: number, a: any) => sum + a.current_value, 0);
 
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-64 bg-gray-300 animate-pulse border-2 border-black" />
+        <div className="border-4 border-black bg-white p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex items-center gap-3">
+          <div className="w-5 h-5 bg-[#F5E600] animate-spin border-2 border-black" />
+          <h2 className="text-xl font-bold uppercase tracking-wider text-black">
+            Loading House Assets...
+          </h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasHouse) {
+    return (
+      <div className="max-w-2xl mx-auto my-12 border-4 border-black bg-white p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-6 text-black">
+        <div className="flex items-center gap-4 border-b-4 border-black pb-4">
+          <Home size={32} className="text-black" />
+          <h1 className="text-3xl font-extrabold uppercase">No Active House Selected</h1>
+        </div>
+        <p className="text-sm font-medium">Please select or create a house workspace to manage house assets.</p>
+        <Button variant="brutalAccent" size="lg" asChild>
+          <Link href="/houses/new">
+            <Plus size={20} /> Create A House
+          </Link>
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-4xl font-bold uppercase border-b-4 border-black pb-2">
+    <div className="space-y-6 text-black">
+      <div className="flex items-center justify-between border-b-4 border-black pb-2">
+        <h1 className="text-4xl font-extrabold uppercase tracking-tight text-black">
           House Assets
         </h1>
-        <Button variant="brutalAccent" asChild>
-          <Link href="/assets/new">
-            <Plus size={20} />
-            Add Asset
-          </Link>
+        <Button variant="brutalAccent" onClick={() => setShowAddForm(!showAddForm)}>
+          <Plus size={20} />
+          {showAddForm ? 'Close Form' : 'Add Asset'}
         </Button>
       </div>
 
-      {/* Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="border-2 border-black bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-8">
-          <div className="mb-4 border-b-2 border-white pb-2">
-            <h3 className="text-lg font-bold uppercase">Total Purchase Value</h3>
-          </div>
-          <MoneyDisplay amount={totalPurchaseValue} size="xl" />
-        </div>
-
-        <div className="border-2 border-black bg-[#F5E600] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-8">
-          <div className="mb-4 border-b-2 border-black pb-2">
-            <h3 className="text-lg font-bold uppercase">Current Value</h3>
-          </div>
-          <MoneyDisplay amount={totalCurrentValue} size="xl" variant="positive" />
-        </div>
-      </div>
-
-      {/* Asset Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {assets.map((asset: any) => (
-          <div
-            key={asset.id}
-            className="border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-          >
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-12 w-12 bg-black text-white flex items-center justify-center font-bold uppercase rounded-none">
-                  A
-                </div>
-                <StatusBadge status={asset.status || 'active'} />
-              </div>
-
-              <h3 className="text-xl font-bold uppercase mb-2">{asset.name}</h3>
-              {asset.description && (
-                <p className="text-sm text-gray-600 mb-4">{asset.description}</p>
-              )}
-
-              <div className="space-y-2 mb-4 border-b-2 border-black pb-4">
-                <div className="flex justify-between">
-                  <span className="text-xs uppercase">Purchase Price:</span>
-                  <span className="font-mono font-bold">₹{asset.purchase_price}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-xs uppercase">Current Value:</span>
-                  <span className="font-mono font-bold">₹{asset.current_value}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-xs uppercase">Purchased:</span>
-                  <span className="font-mono font-bold">
-                    {new Date(asset.purchase_date).toLocaleDateString('en-IN')}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button variant="brutal" size="sm" asChild className="flex-1">
-                  <Link href={`/assets/${asset.id}`}>View</Link>
-                </Button>
-                <Button variant="brutalDanger" size="icon" onClick={() => handleDelete(asset.id)}>
-                  <Trash2 size={16} />
-                </Button>
-              </div>
+      {showAddForm && (
+        <div className="border-4 border-black bg-white p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] space-y-4">
+          <h3 className="text-xl font-extrabold uppercase text-black border-b-2 border-black pb-2">Add New House Asset</h3>
+          <form onSubmit={handleAddAsset} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <Label required>Asset Name</Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Fridge, TV, Microwave"
+                required
+                className="mt-1"
+              />
             </div>
-          </div>
-        ))}
+            <div>
+              <Label>Category</Label>
+              <Input
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                placeholder="e.g. Appliances, Kitchen"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label>Estimated Value (₹)</Label>
+              <Input
+                type="number"
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                placeholder="e.g. 15000"
+                className="mt-1"
+              />
+            </div>
+            <div className="sm:col-span-3 flex justify-end gap-2">
+              <Button type="submit" variant="brutalAccent">Save Asset</Button>
+            </div>
+          </form>
+        </div>
+      )}
 
-        {assets.length === 0 && (
-          <div className="md:col-span-2 lg:col-span-3">
-            <div className="border-2 border-black p-12 text-center">
-              <p className="font-bold uppercase mb-2">No Assets Yet</p>
-              <p className="text-sm uppercase text-gray-600 mb-4">
-                Start tracking your house's shared assets
+      <div className="border-4 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6">
+        <h2 className="text-2xl font-extrabold uppercase border-b-2 border-black pb-4 mb-4 text-black">
+          Shared Belongings Registry
+        </h2>
+
+        {assets.length === 0 ? (
+          <div className="py-12 text-center">
+            <div className="border-4 border-black bg-[#F5E600] p-8 inline-block shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+              <p className="font-extrabold uppercase text-xl mb-2 text-black">No Assets Logged Yet</p>
+              <p className="text-xs font-bold uppercase text-black mb-4">
+                Your house asset registry is empty. Add shared belongings to keep track of ownership!
               </p>
-              <Button variant="brutalAccent" asChild>
-                <Link href="/assets/new">+ Add First Asset</Link>
+              <Button variant="brutalPrimary" onClick={() => setShowAddForm(true)}>
+                <Plus size={18} />
+                Add First Asset
               </Button>
             </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {assets.map((asset) => (
+              <div key={asset.id} className="border-2 border-black bg-white p-4 hover:bg-[#F5E600] transition-colors">
+                <div className="flex items-center gap-3 mb-2">
+                  <Box size={24} className="text-black flex-shrink-0" />
+                  <div>
+                    <h3 className="font-bold uppercase text-lg text-black">{asset.name}</h3>
+                    <span className="text-xs font-mono font-bold bg-black text-white px-2 py-0.5">{asset.category || 'General'}</span>
+                  </div>
+                </div>
+                <div className="mt-4 pt-2 border-t border-black flex justify-between text-xs font-bold uppercase">
+                  <span>Value: ₹{Number(asset.estimated_value || 0).toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

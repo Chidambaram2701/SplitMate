@@ -317,70 +317,80 @@ CREATE POLICY profiles_can_view_own_profile ON profiles
 CREATE POLICY profiles_can_update_own_profile ON profiles
   FOR UPDATE USING (auth.uid() = id);
 
+-- Helper function to bypass RLS recursion safely
+CREATE OR REPLACE FUNCTION get_user_house_ids(user_uuid UUID)
+RETURNS SETOF UUID AS $$
+  SELECT house_id FROM house_members WHERE user_id = user_uuid AND status = 'active';
+$$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
+
 -- ============================================
 -- RLS POLICIES: HOUSES
 -- ============================================
-CREATE POLICY houses_can_view_owned ON houses
-  FOR SELECT USING (auth.uid() = owner_id);
+DROP POLICY IF EXISTS houses_can_view_owned ON houses;
+DROP POLICY IF EXISTS houses_can_view_member ON houses;
+DROP POLICY IF EXISTS houses_can_view ON houses;
+DROP POLICY IF EXISTS houses_can_insert_admin ON houses;
+DROP POLICY IF EXISTS houses_can_insert ON houses;
+DROP POLICY IF EXISTS houses_can_update_admin ON houses;
+DROP POLICY IF EXISTS houses_can_update ON houses;
+DROP POLICY IF EXISTS houses_can_delete_admin ON houses;
+DROP POLICY IF EXISTS houses_can_delete ON houses;
 
-CREATE POLICY houses_can_view_member ON houses
+CREATE POLICY houses_can_view ON houses
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM house_members
-      WHERE house_id = houses.id
-      AND user_id = auth.uid()
-      AND status = 'active'
-    )
+    owner_id = auth.uid()
+    OR id IN (SELECT get_user_house_ids(auth.uid()))
   );
 
-CREATE POLICY houses_can_insert_admin ON houses
-  FOR INSERT WITH CHECK (auth.uid() = owner_id);
+CREATE POLICY houses_can_insert ON houses
+  FOR INSERT WITH CHECK (
+    owner_id = auth.uid()
+  );
 
-CREATE POLICY houses_can_update_admin ON houses
-  FOR UPDATE USING (auth.uid() = owner_id);
+CREATE POLICY houses_can_update ON houses
+  FOR UPDATE USING (
+    owner_id = auth.uid()
+  );
 
-CREATE POLICY houses_can_delete_admin ON houses
-  FOR DELETE USING (auth.uid() = owner_id);
+CREATE POLICY houses_can_delete ON houses
+  FOR DELETE USING (
+    owner_id = auth.uid()
+  );
 
 -- ============================================
 -- RLS POLICIES: HOUSE_MEMBERS
 -- ============================================
+DROP POLICY IF EXISTS house_members_can_view ON house_members;
+DROP POLICY IF EXISTS house_members_can_insert_member ON house_members;
+DROP POLICY IF EXISTS house_members_can_insert ON house_members;
+DROP POLICY IF EXISTS house_members_can_update_admin ON house_members;
+DROP POLICY IF EXISTS house_members_can_update ON house_members;
+DROP POLICY IF EXISTS house_members_can_delete_member ON house_members;
+DROP POLICY IF EXISTS house_members_can_delete ON house_members;
+
 CREATE POLICY house_members_can_view ON house_members
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM house_members hm
-      WHERE hm.house_id IN (
-        SELECT house_id FROM house_members WHERE user_id = auth.uid()
-      )
-      AND hm.house_id = house_members.house_id
-    )
+    user_id = auth.uid()
+    OR house_id IN (SELECT get_user_house_ids(auth.uid()))
+    OR EXISTS (SELECT 1 FROM houses WHERE id = house_members.house_id AND owner_id = auth.uid())
   );
 
-CREATE POLICY house_members_can_insert_member ON house_members
+CREATE POLICY house_members_can_insert ON house_members
   FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM houses h
-      WHERE h.id = house_members.house_id
-      AND h.owner_id = auth.uid()
-    )
+    user_id = auth.uid()
+    OR EXISTS (SELECT 1 FROM houses WHERE id = house_members.house_id AND owner_id = auth.uid())
   );
 
-CREATE POLICY house_members_can_update_admin ON house_members
+CREATE POLICY house_members_can_update ON house_members
   FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM houses h
-      WHERE h.id = house_members.house_id
-      AND h.owner_id = auth.uid()
-    )
+    user_id = auth.uid()
+    OR EXISTS (SELECT 1 FROM houses WHERE id = house_members.house_id AND owner_id = auth.uid())
   );
 
-CREATE POLICY house_members_can_delete_member ON house_members
+CREATE POLICY house_members_can_delete ON house_members
   FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM houses h
-      WHERE h.id = house_members.house_id
-      AND h.owner_id = auth.uid()
-    )
+    user_id = auth.uid()
+    OR EXISTS (SELECT 1 FROM houses WHERE id = house_members.house_id AND owner_id = auth.uid())
   );
 
 -- ============================================
@@ -417,91 +427,64 @@ CREATE POLICY house_invitations_can_update_member ON house_invitations
 -- ============================================
 -- RLS POLICIES: EXPENSES
 -- ============================================
+DROP POLICY IF EXISTS expenses_can_view ON expenses;
+DROP POLICY IF EXISTS expenses_can_insert ON expenses;
+DROP POLICY IF EXISTS expenses_can_update_admin ON expenses;
+DROP POLICY IF EXISTS expenses_can_delete_admin ON expenses;
+
 CREATE POLICY expenses_can_view ON expenses
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM house_members hm
-      WHERE hm.house_id = expenses.house_id
-      AND hm.user_id = auth.uid()
-      AND hm.status = 'active'
-    )
+    house_id IN (SELECT get_user_house_ids(auth.uid()))
+    OR EXISTS (SELECT 1 FROM houses WHERE id = expenses.house_id AND owner_id = auth.uid())
   );
 
 CREATE POLICY expenses_can_insert ON expenses
   FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM house_members hm
-      WHERE hm.house_id = expenses.house_id
-      AND hm.user_id = auth.uid()
-      AND hm.status = 'active'
-    )
+    paid_by = auth.uid()
+    OR house_id IN (SELECT get_user_house_ids(auth.uid()))
+    OR EXISTS (SELECT 1 FROM houses WHERE id = expenses.house_id AND owner_id = auth.uid())
   );
 
 CREATE POLICY expenses_can_update_admin ON expenses
   FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM houses h
-      WHERE h.id = expenses.house_id
-      AND h.owner_id = auth.uid()
-    )
+    paid_by = auth.uid()
+    OR EXISTS (SELECT 1 FROM houses WHERE id = expenses.house_id AND owner_id = auth.uid())
   );
 
 CREATE POLICY expenses_can_delete_admin ON expenses
   FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM houses h
-      WHERE h.id = expenses.house_id
-      AND h.owner_id = auth.uid()
-    )
+    paid_by = auth.uid()
+    OR EXISTS (SELECT 1 FROM houses WHERE id = expenses.house_id AND owner_id = auth.uid())
   );
 
 -- ============================================
 -- RLS POLICIES: EXPENSE_SPLITS
 -- ============================================
+DROP POLICY IF EXISTS expense_splits_can_view ON expense_splits;
+DROP POLICY IF EXISTS expense_splits_can_insert ON expense_splits;
+DROP POLICY IF EXISTS expense_splits_can_update_admin ON expense_splits;
+DROP POLICY IF EXISTS expense_splits_can_delete_admin ON expense_splits;
+
 CREATE POLICY expense_splits_can_view ON expense_splits
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM house_members hm
-      WHERE hm.house_id IN (
-        SELECT house_id FROM expenses e WHERE e.id = expense_splits.expense_id
-      )
-      AND hm.user_id = auth.uid()
-      AND hm.status = 'active'
-    )
+    participant_id = auth.uid()
+    OR EXISTS (SELECT 1 FROM expenses e WHERE e.id = expense_splits.expense_id AND e.paid_by = auth.uid())
   );
 
 CREATE POLICY expense_splits_can_insert ON expense_splits
   FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM house_members hm
-      WHERE hm.house_id IN (
-        SELECT house_id FROM expenses e WHERE e.id = expense_splits.expense_id
-      )
-      AND hm.user_id = auth.uid()
-      AND hm.status = 'active'
-    )
+    EXISTS (SELECT 1 FROM expenses e WHERE e.id = expense_splits.expense_id AND e.paid_by = auth.uid())
+    OR participant_id = auth.uid()
   );
 
 CREATE POLICY expense_splits_can_update_admin ON expense_splits
   FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM houses h
-      WHERE h.id IN (
-        SELECT house_id FROM expenses e WHERE e.id = expense_splits.expense_id
-      )
-      AND h.owner_id = auth.uid()
-    )
+    EXISTS (SELECT 1 FROM expenses e WHERE e.id = expense_splits.expense_id AND e.paid_by = auth.uid())
   );
 
 CREATE POLICY expense_splits_can_delete_admin ON expense_splits
   FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM houses h
-      WHERE h.id IN (
-        SELECT house_id FROM expenses e WHERE e.id = expense_splits.expense_id
-      )
-      AND h.owner_id = auth.uid()
-    )
+    EXISTS (SELECT 1 FROM expenses e WHERE e.id = expense_splits.expense_id AND e.paid_by = auth.uid())
   );
 
 -- ============================================
