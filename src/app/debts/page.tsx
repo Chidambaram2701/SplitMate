@@ -36,50 +36,54 @@ export default function DebtsPage() {
       // 1. Fetch debts where current user OWES money (Debtor)
       const { data: debtorData, error: debtorError } = await supabase
         .from('debts')
-        .select(`
-          id,
-          description,
-          original_amount,
-          remaining_amount,
-          due_date,
-          status,
-          created_at,
-          creditor_id,
-          creditor:creditor_id (
-            display_name,
-            email
-          )
-        `)
+        .select('id, description, original_amount, remaining_amount, due_date, status, created_at, creditor_id')
         .eq('house_id', houseId)
         .eq('debtor_id', user.id)
         .order('created_at', { ascending: false });
 
       if (debtorError) console.error('Error fetching debts user owes:', debtorError);
-      setIOweDebts(debtorData || []);
 
       // 2. Fetch debts where others OWE money to current user (Creditor)
       const { data: creditorData, error: creditorError } = await supabase
         .from('debts')
-        .select(`
-          id,
-          description,
-          original_amount,
-          remaining_amount,
-          due_date,
-          status,
-          created_at,
-          debtor_id,
-          debtor:debtor_id (
-            display_name,
-            email
-          )
-        `)
+        .select('id, description, original_amount, remaining_amount, due_date, status, created_at, debtor_id')
         .eq('house_id', houseId)
         .eq('creditor_id', user.id)
         .order('created_at', { ascending: false });
 
       if (creditorError) console.error('Error fetching debts owed to user:', creditorError);
-      setTheyOweMeDebts(creditorData || []);
+
+      const allUserIds = Array.from(
+        new Set([
+          ...(debtorData || []).map((d: any) => d.creditor_id),
+          ...(creditorData || []).map((d: any) => d.debtor_id),
+        ].filter(Boolean))
+      );
+
+      const profileMap = new Map();
+      if (allUserIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, display_name, email')
+          .in('id', allUserIds);
+
+        if (profilesData) {
+          profilesData.forEach((p: any) => profileMap.set(p.id, p));
+        }
+      }
+
+      const enrichedIOwe = (debtorData || []).map((d: any) => ({
+        ...d,
+        creditor: profileMap.get(d.creditor_id) || { display_name: 'Roommate' },
+      }));
+
+      const enrichedTheyOwe = (creditorData || []).map((d: any) => ({
+        ...d,
+        debtor: profileMap.get(d.debtor_id) || { display_name: 'Roommate' },
+      }));
+
+      setIOweDebts(enrichedIOwe);
+      setTheyOweMeDebts(enrichedTheyOwe);
     } catch (err) {
       console.error('Error in loadDebts:', err);
     } finally {

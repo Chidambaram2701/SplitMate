@@ -41,14 +41,26 @@ export default function CreateExpensePage() {
 
       let houseId = sessionStorage.getItem('currentHouseId');
       if (!houseId) {
-        const { data: houseRows } = await supabase
-          .from('houses')
-          .select('id')
+        const { data: memberRows } = await supabase
+          .from('house_members')
+          .select('house_id')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
           .limit(1);
 
-        if (houseRows && houseRows.length > 0) {
-          houseId = houseRows[0].id;
+        if (memberRows && memberRows.length > 0) {
+          houseId = memberRows[0].house_id;
           sessionStorage.setItem('currentHouseId', houseId);
+        } else {
+          const { data: houseRows } = await supabase
+            .from('houses')
+            .select('id')
+            .limit(1);
+
+          if (houseRows && houseRows.length > 0) {
+            houseId = houseRows[0].id;
+            sessionStorage.setItem('currentHouseId', houseId);
+          }
         }
       }
 
@@ -132,10 +144,22 @@ export default function CreateExpensePage() {
     }
 
     if (!houseId) {
-      const { data: houseRows } = await supabase.from('houses').select('id').limit(1);
-      if (houseRows && houseRows.length > 0) {
-        houseId = houseRows[0].id;
+      const { data: memberRows } = await supabase
+        .from('house_members')
+        .select('house_id')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .limit(1);
+
+      if (memberRows && memberRows.length > 0) {
+        houseId = memberRows[0].house_id;
         sessionStorage.setItem('currentHouseId', houseId);
+      } else {
+        const { data: houseRows } = await supabase.from('houses').select('id').limit(1);
+        if (houseRows && houseRows.length > 0) {
+          houseId = houseRows[0].id;
+          sessionStorage.setItem('currentHouseId', houseId);
+        }
       }
     }
 
@@ -180,7 +204,7 @@ export default function CreateExpensePage() {
       }
 
       for (const memberUserId of selectedMembers) {
-        await supabase
+        const { error: splitError } = await supabase
           .from('expense_splits')
           .insert({
             expense_id: expense.id,
@@ -189,11 +213,16 @@ export default function CreateExpensePage() {
             percentage: parseFloat(((splitAmount / expenseAmount) * 100).toFixed(2)),
             settled: memberUserId === user.id,
           });
+
+        if (splitError) {
+          console.error('Expense split insert error:', splitError);
+          throw new Error(`Failed to save expense split: ${splitError.message}`);
+        }
       }
 
       for (const memberUserId of selectedMembers) {
         if (memberUserId !== user.id) {
-          await supabase
+          const { error: debtError } = await supabase
             .from('debts')
             .insert({
               house_id: houseId,
@@ -205,6 +234,11 @@ export default function CreateExpensePage() {
               description: `Share of ${description.trim()}`,
               status: 'pending',
             });
+
+          if (debtError) {
+            console.error('Debt insert error:', debtError);
+            throw new Error(`Failed to record debt balance: ${debtError.message}`);
+          }
         }
       }
 

@@ -20,35 +20,71 @@ export default function ExpensesPage() {
   async function loadExpenses() {
     setLoading(true);
     try {
-      const houseId = sessionStorage.getItem('currentHouseId');
+      let houseId = sessionStorage.getItem('currentHouseId');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      if (!houseId) {
+        const { data: memberRows } = await supabase
+          .from('house_members')
+          .select('house_id')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .limit(1);
+
+        if (memberRows && memberRows.length > 0) {
+          houseId = memberRows[0].house_id;
+          sessionStorage.setItem('currentHouseId', houseId);
+        } else {
+          const { data: houseRows } = await supabase.from('houses').select('id').limit(1);
+          if (houseRows && houseRows.length > 0) {
+            houseId = houseRows[0].id;
+            sessionStorage.setItem('currentHouseId', houseId);
+          }
+        }
+      }
+
       if (!houseId) {
         setHasHouse(false);
         return;
       }
       setHasHouse(true);
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
       const { data: expensesData, error } = await supabase
         .from('expenses')
-        .select(`
-          id,
-          description,
-          total_amount,
-          date,
-          created_at,
-          paid_by (
-            display_name
-          )
-        `)
+        .select('id, description, total_amount, date, created_at, paid_by')
         .eq('house_id', houseId)
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error loading expenses:', error);
-      } else if (expensesData) {
-        setExpenses(expensesData);
+        setExpenses([]);
+      } else if (expensesData && expensesData.length > 0) {
+        const paidByIds = Array.from(new Set(expensesData.map((e: any) => e.paid_by).filter(Boolean)));
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, display_name, email')
+          .in('id', paidByIds);
+
+        const profileMap = new Map();
+        if (profilesData) {
+          profilesData.forEach((p: any) => profileMap.set(p.id, p));
+        }
+
+        const enrichedExpenses = expensesData.map((e: any) => {
+          const prof = profileMap.get(e.paid_by);
+          const isUser = e.paid_by === user.id;
+          return {
+            ...e,
+            paid_by: {
+              display_name: prof?.display_name || (isUser ? (user.user_metadata?.display_name || 'You') : 'Roommate'),
+            },
+          };
+        });
+
+        setExpenses(enrichedExpenses);
+      } else {
+        setExpenses([]);
       }
     } catch (err) {
       console.error('Failed loading expenses:', err);

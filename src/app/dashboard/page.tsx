@@ -64,37 +64,64 @@ export default function DashboardPage() {
       // 1. Get debts where user is debtor (YOU OWE OTHERS)
       const { data: debtorDebts } = await supabase
         .from('debts')
-        .select(`
-          id,
-          remaining_amount,
-          description,
-          status,
-          creditor:creditor_id (
-            display_name,
-            email
-          )
-        `)
+        .select('id, remaining_amount, description, status, creditor_id')
         .eq('house_id', houseId)
         .eq('debtor_id', user.id);
 
       // 2. Get debts where user is creditor (OTHERS OWE YOU)
       const { data: creditorDebts } = await supabase
         .from('debts')
-        .select(`
-          id,
-          remaining_amount,
-          description,
-          status,
-          debtor:debtor_id (
-            display_name,
-            email
-          )
-        `)
+        .select('id, remaining_amount, description, status, debtor_id')
         .eq('house_id', houseId)
         .eq('creditor_id', user.id);
 
-      const activeIOweList = (debtorDebts as any[])?.filter((d: any) => (Number(d.remaining_amount) || 0) > 0) || [];
-      const activeTheyOweList = (creditorDebts as any[])?.filter((d: any) => (Number(d.remaining_amount) || 0) > 0) || [];
+      // 3. Fetch recent expenses
+      const { data: rawExpenses } = await supabase
+        .from('expenses')
+        .select('id, description, total_amount, date, paid_by, created_at')
+        .eq('house_id', houseId)
+        .order('created_at', { ascending: false })
+        .limit(4);
+
+      // Fetch all referenced user profiles for names
+      const allUserIds = Array.from(
+        new Set([
+          ...(debtorDebts || []).map((d: any) => d.creditor_id),
+          ...(creditorDebts || []).map((d: any) => d.debtor_id),
+          ...(rawExpenses || []).map((e: any) => e.paid_by),
+        ].filter(Boolean))
+      );
+
+      const profileMap = new Map();
+      if (allUserIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, display_name, email')
+          .in('id', allUserIds);
+
+        if (profilesData) {
+          profilesData.forEach((p: any) => profileMap.set(p.id, p));
+        }
+      }
+
+      const activeIOweList = (debtorDebts || [])
+        .filter((d: any) => (Number(d.remaining_amount) || 0) > 0)
+        .map((d: any) => ({
+          ...d,
+          creditor: profileMap.get(d.creditor_id) || { display_name: 'Roommate' },
+        }));
+
+      const activeTheyOweList = (creditorDebts || [])
+        .filter((d: any) => (Number(d.remaining_amount) || 0) > 0)
+        .map((d: any) => ({
+          ...d,
+          debtor: profileMap.get(d.debtor_id) || { display_name: 'Roommate' },
+        }));
+
+      const enrichedRecentExpenses = (rawExpenses || []).map((e: any) => ({
+        ...e,
+        paid_by: profileMap.get(e.paid_by) || { display_name: e.paid_by === user.id ? 'You' : 'Roommate' },
+      }));
 
       setPeopleIOwe(activeIOweList);
       setPeopleWhoOweMe(activeTheyOweList);
@@ -105,16 +132,7 @@ export default function DashboardPage() {
       setYouOwe(totalOwed);
       setYouReceive(totalReceivable);
       setNetBalance(totalReceivable - totalOwed);
-
-      // Fetch recent expenses from Supabase
-      const { data: expenseData } = await supabase
-        .from('expenses')
-        .select('id, description, total_amount, date, paid_by:paid_by(display_name)')
-        .eq('house_id', houseId)
-        .order('created_at', { ascending: false })
-        .limit(4);
-
-      setRecentExpenses(expenseData || []);
+      setRecentExpenses(enrichedRecentExpenses);
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {

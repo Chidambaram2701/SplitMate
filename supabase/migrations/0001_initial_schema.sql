@@ -532,10 +532,17 @@ CREATE POLICY recurring_expenses_can_delete_admin ON recurring_expenses
 
 -- ============================================
 -- RLS POLICIES: DEBTS
--- ============================================
+DROP POLICY IF EXISTS debts_can_view ON debts;
+DROP POLICY IF EXISTS debts_can_insert ON debts;
+DROP POLICY IF EXISTS debts_can_update ON debts;
+DROP POLICY IF EXISTS debts_can_update_admin ON debts;
+
 CREATE POLICY debts_can_view ON debts
   FOR SELECT USING (
-    EXISTS (
+    debtor_id = auth.uid()
+    OR creditor_id = auth.uid()
+    OR house_id IN (SELECT get_user_house_ids(auth.uid()))
+    OR EXISTS (
       SELECT 1 FROM house_members hm
       WHERE hm.house_id = debts.house_id
       AND hm.user_id = auth.uid()
@@ -545,7 +552,10 @@ CREATE POLICY debts_can_view ON debts
 
 CREATE POLICY debts_can_insert ON debts
   FOR INSERT WITH CHECK (
-    EXISTS (
+    creditor_id = auth.uid()
+    OR debtor_id = auth.uid()
+    OR house_id IN (SELECT get_user_house_ids(auth.uid()))
+    OR EXISTS (
       SELECT 1 FROM house_members hm
       WHERE hm.house_id = debts.house_id
       AND hm.user_id = auth.uid()
@@ -553,13 +563,11 @@ CREATE POLICY debts_can_insert ON debts
     )
   );
 
-CREATE POLICY debts_can_update_admin ON debts
+CREATE POLICY debts_can_update ON debts
   FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM houses h
-      WHERE h.id = debts.house_id
-      AND h.owner_id = auth.uid()
-    )
+    creditor_id = auth.uid()
+    OR debtor_id = auth.uid()
+    OR house_id IN (SELECT get_user_house_ids(auth.uid()))
   );
 
 CREATE POLICY debts_can_delete_admin ON debts
