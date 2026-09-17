@@ -1,21 +1,40 @@
-// Login Page
+// Login Page with Auto-House Join on Invitation
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { Home } from 'lucide-react';
 import Link from 'next/link';
 
-export default function LoginPage() {
-  const [email, setEmail] = useState('');
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const inviteHouseId = searchParams.get('houseId');
+  const initialEmail = searchParams.get('email') || '';
+
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [houseName, setHouseName] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    if (inviteHouseId) {
+      supabase
+        .from('houses')
+        .select('name')
+        .eq('id', inviteHouseId)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.name) setHouseName(data.name);
+        });
+    }
+  }, [inviteHouseId]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,21 +42,66 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+      const cleanEmail = email.trim().toLowerCase();
+
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
         password,
       });
 
-      if (error) {
-        if (error.message.toLowerCase().includes('email not confirmed')) {
+      if (signInError) {
+        if (signInError.message.toLowerCase().includes('email not confirmed')) {
           setError('Email Not Confirmed: Please check your inbox or turn off "Confirm email" in Supabase Auth Settings.');
         } else {
-          setError(error.message);
+          setError(signInError.message);
         }
         return;
       }
 
-      if (data.session) {
+      if (data.user) {
+        const user = data.user;
+        let targetHouseId = inviteHouseId;
+
+        // Check pending invitations table if no houseId in URL
+        if (!targetHouseId) {
+          const { data: pendingInvite } = await supabase
+            .from('house_invitations')
+            .select('house_id')
+            .eq('invitee_email', cleanEmail)
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false })
+            .maybeSingle();
+
+          if (pendingInvite?.house_id) {
+            targetHouseId = pendingInvite.house_id;
+          }
+        }
+
+        // Add user to house_members if there is a target house
+        if (targetHouseId) {
+          const { error: memberError } = await supabase
+            .from('house_members')
+            .upsert({
+              house_id: targetHouseId,
+              user_id: user.id,
+              role: 'member',
+              status: 'active',
+              joined_at: new Date().toISOString(),
+            }, { onConflict: 'house_id,user_id' });
+
+          if (!memberError) {
+            sessionStorage.setItem('currentHouseId', targetHouseId);
+
+            await supabase
+              .from('house_invitations')
+              .update({ status: 'accepted' })
+              .eq('invitee_email', cleanEmail)
+              .eq('house_id', targetHouseId);
+          } else {
+            console.warn('Could not auto-add user to house:', memberError);
+          }
+        }
+
         router.push('/dashboard');
         router.refresh();
       }
@@ -61,6 +125,20 @@ export default function LoginPage() {
       </div>
 
       <Card variant="default" size="lg" className="space-y-6 border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] bg-white p-6">
+        {inviteHouseId && (
+          <div className="bg-[#F5E600] border-2 border-black p-4 flex items-center gap-3">
+            <Home size={24} className="text-black flex-shrink-0" />
+            <div>
+              <div className="font-extrabold uppercase text-sm text-black">
+                Invitation to Join {houseName ? `"${houseName}"` : 'House'}
+              </div>
+              <div className="text-[10px] font-bold uppercase text-black">
+                Sign in below to accept the invitation and join this house!
+              </div>
+            </div>
+          </div>
+        )}
+
         <div>
           <h2 className="text-2xl font-extrabold uppercase border-b-2 border-black pb-2 mb-2 text-black">
             Login
@@ -121,17 +199,22 @@ export default function LoginPage() {
 
         <div className="text-center text-xs font-bold uppercase border-t-2 border-black pt-4">
           <p className="mb-2 text-gray-600">Don't have an account?</p>
-          <Link href="/auth/register" className="underline hover:text-[#F5E600] text-black">
+          <Link
+            href={`/auth/register${inviteHouseId ? `?houseId=${inviteHouseId}` : ''}`}
+            className="underline hover:text-[#F5E600] text-black"
+          >
             Create new account
           </Link>
         </div>
       </Card>
-
-      <div className="text-center">
-        <Link href="/dashboard" className="text-xs font-bold uppercase underline text-black">
-          ← Back to home
-        </Link>
-      </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center font-bold">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

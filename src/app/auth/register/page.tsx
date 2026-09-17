@@ -1,22 +1,42 @@
-// Register Page
+// Register Page with Auto-House Join on Invitation
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { Home } from 'lucide-react';
 import Link from 'next/link';
 
-export default function RegisterPage() {
+function RegisterForm() {
+  const searchParams = useSearchParams();
+  const inviteHouseId = searchParams.get('houseId');
+  const initialEmail = searchParams.get('email') || '';
+
   const [displayName, setDisplayName] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [houseName, setHouseName] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    if (inviteHouseId) {
+      // Fetch house name to show invitation header
+      supabase
+        .from('houses')
+        .select('name')
+        .eq('id', inviteHouseId)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.name) setHouseName(data.name);
+        });
+    }
+  }, [inviteHouseId]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,52 +44,135 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
+      const cleanEmail = email.trim().toLowerCase();
+
+      // 1. Sign up user
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: cleanEmail,
         password,
         options: {
           data: {
-            display_name: displayName,
+            display_name: displayName.trim(),
           },
         },
       });
 
-      if (error) {
-        setError(error.message);
+      if (signUpError) {
+        setError(signUpError.message);
         return;
       }
 
-      // Show success message
-      alert('Registration successful! Please check your email to verify your account.');
-      router.push('/auth/login');
+      const user = authData.user;
+      if (!user) {
+        setError('Registration failed. Please try again.');
+        return;
+      }
+
+      // 2. Insert user profile into public.profiles
+      await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          email: cleanEmail,
+          display_name: displayName.trim(),
+        });
+
+      // 3. Handle House Invitation Join
+      let targetHouseId = inviteHouseId;
+
+      // If no houseId in URL, check if there's a pending invite for this email in house_invitations
+      if (!targetHouseId) {
+        const { data: pendingInvite } = await supabase
+          .from('house_invitations')
+          .select('house_id')
+          .eq('invitee_email', cleanEmail)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false })
+          .maybeSingle();
+
+        if (pendingInvite?.house_id) {
+          targetHouseId = pendingInvite.house_id;
+        }
+      }
+
+      // Add user to house_members if there is an invite target house
+      if (targetHouseId) {
+        const { error: memberError } = await supabase
+          .from('house_members')
+          .insert({
+            house_id: targetHouseId,
+            user_id: user.id,
+            role: 'member',
+            status: 'active',
+            joined_at: new Date().toISOString(),
+          });
+
+        if (!memberError) {
+          sessionStorage.setItem('currentHouseId', targetHouseId);
+
+          // Mark invitation as accepted
+          await supabase
+            .from('house_invitations')
+            .update({ status: 'accepted' })
+            .eq('invitee_email', cleanEmail)
+            .eq('house_id', targetHouseId);
+        } else {
+          console.warn('Could not auto-add to house members:', memberError);
+        }
+      }
+
+      // If session exists (email confirmation turned off), redirect immediately to dashboard
+      if (authData.session) {
+        router.push('/dashboard');
+        router.refresh();
+      } else {
+        router.push('/auth/login');
+      }
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      setError(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 text-black">
       <div className="text-center">
-        <h1 className="text-4xl font-bold uppercase tracking-tighter border-b-4 border-black pb-4">
+        <h1 className="text-4xl font-extrabold uppercase tracking-tighter border-b-4 border-black pb-4 text-black">
           RoommateX
         </h1>
-        <p className="mt-2 text-sm uppercase tracking-widest text-gray-600">
+        <p className="mt-2 text-xs font-bold uppercase tracking-widest text-gray-700">
           Shared House Financial Platform
         </p>
       </div>
 
-      <Card variant="default" size="lg" className="space-y-6">
+      <Card variant="default" size="lg" className="space-y-6 border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] bg-white p-6">
+        {inviteHouseId && (
+          <div className="bg-[#F5E600] border-2 border-black p-4 flex items-center gap-3">
+            <Home size={24} className="text-black flex-shrink-0" />
+            <div>
+              <div className="font-extrabold uppercase text-sm text-black">
+                Invitation to Join {houseName ? `"${houseName}"` : 'House'}
+              </div>
+              <div className="text-[10px] font-bold uppercase text-black">
+                Sign up below to automatically join your roommate's house!
+              </div>
+            </div>
+          </div>
+        )}
+
         <div>
-          <h2 className="text-2xl font-bold uppercase border-b-2 border-black pb-2 mb-4">
+          <h2 className="text-2xl font-extrabold uppercase border-b-2 border-black pb-2 mb-2 text-black">
             Create Account
           </h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-xs font-bold uppercase text-gray-700">
             Join RoommateX to manage your house finances
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-100 border-2 border-red-600 p-4 text-red-700 font-bold uppercase text-sm">
+          <div className="bg-red-100 border-4 border-red-600 p-4 text-red-800 font-extrabold uppercase text-xs">
             {error}
           </div>
         )}
@@ -77,15 +180,16 @@ export default function RegisterPage() {
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
             <Label htmlFor="displayName" required>
-              Display Name
+              Your Name / Display Name
             </Label>
             <Input
               id="displayName"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Enter your name"
+              placeholder="e.g. Alex Smith"
               required
               disabled={loading}
+              className="mt-1"
             />
           </div>
 
@@ -101,6 +205,7 @@ export default function RegisterPage() {
               placeholder="Enter your email"
               required
               disabled={loading}
+              className="mt-1"
             />
           </div>
 
@@ -113,31 +218,37 @@ export default function RegisterPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Create a password"
+              placeholder="Create a password (min 6 chars)"
               required
               minLength={6}
               disabled={loading}
+              className="mt-1"
             />
           </div>
 
           <Button type="submit" variant="brutalPrimary" fullWidth disabled={loading}>
-            {loading ? 'Creating Account...' : 'Create Account'}
+            {loading ? 'Creating Account & Joining House...' : 'Create Account & Join House'}
           </Button>
         </form>
 
-        <div className="text-center text-sm">
-          <p className="mb-4">OR</p>
-          <Link href="/auth/login" className="underline hover:text-gray-800">
-            Already have an account? Sign in
+        <div className="text-center text-xs font-bold uppercase border-t-2 border-black pt-4">
+          <p className="mb-2 text-gray-600">Already have an account?</p>
+          <Link
+            href={`/auth/login${inviteHouseId ? `?houseId=${inviteHouseId}` : ''}`}
+            className="underline hover:text-[#F5E600] text-black"
+          >
+            Sign in to accept invite
           </Link>
         </div>
       </Card>
-
-      <div className="text-center">
-        <Link href="/" className="text-sm underline hover:text-gray-800">
-          ← Back to home
-        </Link>
-      </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center font-bold">Loading...</div>}>
+      <RegisterForm />
+    </Suspense>
   );
 }
