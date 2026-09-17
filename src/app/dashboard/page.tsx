@@ -16,10 +16,12 @@ export default function DashboardPage() {
   const [youOwe, setYouOwe] = useState(0);
   const [youReceive, setYouReceive] = useState(0);
   const [netBalance, setNetBalance] = useState(0);
-  const [pendingDebtsCount, setPendingDebtsCount] = useState(0);
   const [memberCount, setMemberCount] = useState(0);
   const [recentExpenses, setRecentExpenses] = useState<any[]>([]);
-  const [pendingDebtsList, setPendingDebtsList] = useState<any[]>([]);
+
+  // Detailed lists of WHO owes WHO
+  const [peopleIOwe, setPeopleIOwe] = useState<any[]>([]);
+  const [peopleWhoOweMe, setPeopleWhoOweMe] = useState<any[]>([]);
 
   async function loadDashboardData() {
     setLoading(true);
@@ -59,26 +61,46 @@ export default function DashboardPage() {
 
       setMemberCount(members?.length || 1);
 
-      // Get debts where user is creditor (people who owe user)
-      const { data: creditorDebts } = await supabase
-        .from('debts')
-        .select('id, remaining_amount, original_amount, due_date, status, debtor:debtor_id(display_name)')
-        .eq('house_id', houseId)
-        .eq('creditor_id', user.id);
-
-      // Get debts where user is debtor (user owes others)
+      // 1. Get debts where user is debtor (YOU OWE OTHERS)
       const { data: debtorDebts } = await supabase
         .from('debts')
-        .select('id, remaining_amount, status')
+        .select(`
+          id,
+          remaining_amount,
+          description,
+          status,
+          creditor:creditor_id (
+            display_name,
+            email
+          )
+        `)
         .eq('house_id', houseId)
         .eq('debtor_id', user.id);
 
-      const totalReceivable = (creditorDebts as any[])?.reduce((sum: number, d: any) => sum + (Number(d.remaining_amount) || 0), 0) || 0;
-      const totalOwed = (debtorDebts as any[])?.reduce((sum: number, d: any) => sum + (Number(d.remaining_amount) || 0), 0) || 0;
+      // 2. Get debts where user is creditor (OTHERS OWE YOU)
+      const { data: creditorDebts } = await supabase
+        .from('debts')
+        .select(`
+          id,
+          remaining_amount,
+          description,
+          status,
+          debtor:debtor_id (
+            display_name,
+            email
+          )
+        `)
+        .eq('house_id', houseId)
+        .eq('creditor_id', user.id);
 
-      const activeDebts = (creditorDebts as any[])?.filter((d: any) => (Number(d.remaining_amount) || 0) > 0) || [];
-      setPendingDebtsList(activeDebts.slice(0, 4));
-      setPendingDebtsCount(activeDebts.length);
+      const activeIOweList = (debtorDebts as any[])?.filter((d: any) => (Number(d.remaining_amount) || 0) > 0) || [];
+      const activeTheyOweList = (creditorDebts as any[])?.filter((d: any) => (Number(d.remaining_amount) || 0) > 0) || [];
+
+      setPeopleIOwe(activeIOweList);
+      setPeopleWhoOweMe(activeTheyOweList);
+
+      const totalOwed = activeIOweList.reduce((sum: number, d: any) => sum + (Number(d.remaining_amount) || 0), 0);
+      const totalReceivable = activeTheyOweList.reduce((sum: number, d: any) => sum + (Number(d.remaining_amount) || 0), 0);
 
       setYouOwe(totalOwed);
       setYouReceive(totalReceivable);
@@ -184,15 +206,29 @@ export default function DashboardPage() {
               <h3 className="text-lg font-bold uppercase text-white">You Owe</h3>
               <ArrowUpRight size={20} className="text-red-400" />
             </div>
-            <div className="mb-6">
+            <div className="mb-4">
               <MoneyDisplay
                 amount={youOwe}
                 size="xl"
                 variant="negative"
               />
             </div>
+
+            {/* Names Breakdown */}
+            {peopleIOwe.length > 0 ? (
+              <div className="space-y-1.5 border-t border-white/20 pt-3">
+                {peopleIOwe.slice(0, 3).map((d: any) => (
+                  <div key={d.id} className="flex justify-between items-center text-xs text-red-300">
+                    <span className="truncate max-w-[140px]">To {d.creditor?.display_name || 'Roommate'}:</span>
+                    <span className="font-mono font-bold">₹{d.remaining_amount}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[11px] uppercase text-gray-400">You owe ₹0 to roommates</p>
+            )}
           </div>
-          <div className="pt-2 border-t border-white/20 flex justify-between text-xs font-mono">
+          <div className="pt-3 border-t border-white/20 flex justify-between text-[11px] font-mono mt-4">
             <span className="uppercase text-gray-300">Pending Liabilities</span>
             <span className="font-bold text-white">₹{youOwe}</span>
           </div>
@@ -205,15 +241,29 @@ export default function DashboardPage() {
               <h3 className="text-lg font-bold uppercase text-black">You Receive</h3>
               <ArrowDownRight size={20} className="text-green-800" />
             </div>
-            <div className="mb-6">
+            <div className="mb-4">
               <MoneyDisplay
                 amount={youReceive}
                 size="xl"
                 variant="positive"
               />
             </div>
+
+            {/* Names Breakdown */}
+            {peopleWhoOweMe.length > 0 ? (
+              <div className="space-y-1.5 border-t border-black/20 pt-3">
+                {peopleWhoOweMe.slice(0, 3).map((d: any) => (
+                  <div key={d.id} className="flex justify-between items-center text-xs text-green-950 font-bold">
+                    <span className="truncate max-w-[140px]">From {d.debtor?.display_name || 'Roommate'}:</span>
+                    <span className="font-mono">₹{d.remaining_amount}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[11px] uppercase text-black font-bold">No receivables pending</p>
+            )}
           </div>
-          <div className="pt-2 border-t-2 border-black flex justify-between text-xs font-mono font-bold">
+          <div className="pt-3 border-t-2 border-black flex justify-between text-[11px] font-mono font-bold mt-4">
             <span className="uppercase text-black">Pending Receivables</span>
             <span className="text-black">₹{youReceive}</span>
           </div>
@@ -223,7 +273,7 @@ export default function DashboardPage() {
         <div className="border-4 border-black bg-white text-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6 flex flex-col justify-between">
           <div>
             <div className="mb-4 border-b-2 border-black pb-2 flex items-center justify-between">
-              <h3 className="text-lg font-bold uppercase text-black">Net Balance</h3>
+              <h3 className="text-lg font-bold uppercase text-black">Net Position</h3>
               <CreditCard size={20} className="text-black" />
             </div>
             <div className="mb-6">
@@ -240,7 +290,7 @@ export default function DashboardPage() {
             </span>
             <Button variant="brutalPrimary" size="sm" asChild>
               <Link href="/debts">
-                View Debts
+                View All Debts
               </Link>
             </Button>
           </div>
@@ -249,36 +299,60 @@ export default function DashboardPage() {
 
       {/* Real Data Widgets */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Pending Debts */}
+        {/* Debts Summary List */}
         <div className="border-4 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6 space-y-4">
           <div className="flex items-center justify-between border-b-2 border-black pb-2">
-            <h3 className="text-xl font-bold uppercase text-black">Pending Receivables</h3>
+            <h3 className="text-xl font-bold uppercase text-black">Active Roommate Debts</h3>
             <Button variant="brutal" size="sm" asChild>
               <Link href="/debts">View All</Link>
             </Button>
           </div>
-          {pendingDebtsList.length === 0 ? (
+          {peopleIOwe.length === 0 && peopleWhoOweMe.length === 0 ? (
             <p className="text-xs font-bold uppercase text-gray-500 py-6 text-center">
-              No pending receivables. All debts are clear!
+              No pending roommate debts. All balances are clear!
             </p>
           ) : (
             <div className="space-y-3">
-              {pendingDebtsList.map((debt: any) => (
-                <div key={debt.id} className="flex items-center justify-between p-3 border-2 border-black hover:bg-[#F5E600] transition-colors">
+              {/* Show who you owe */}
+              {peopleIOwe.map((debt: any) => (
+                <div key={debt.id} className="flex items-center justify-between p-3 border-2 border-black bg-red-50 hover:bg-red-100 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 bg-black text-white flex items-center justify-center font-bold uppercase rounded-none">
-                      {debt.debtor?.display_name?.[0] || 'D'}
+                    <div className="h-9 w-9 bg-red-600 text-white flex items-center justify-center font-bold uppercase rounded-none border border-black">
+                      {debt.creditor?.display_name?.[0] || 'C'}
                     </div>
                     <div>
-                      <div className="font-bold uppercase text-sm">{debt.debtor?.display_name || 'Roommate'}</div>
-                      <div className="text-[10px] uppercase text-gray-600">
-                        {debt.due_date ? `Due: ${new Date(debt.due_date).toLocaleDateString('en-IN')}` : 'No due date'}
+                      <div className="font-extrabold uppercase text-xs text-black">
+                        You owe <span className="text-red-700">{debt.creditor?.display_name || 'Roommate'}</span>
+                      </div>
+                      <div className="text-[10px] font-bold uppercase text-gray-600">
+                        {debt.description || 'Expense share'}
                       </div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-mono font-bold text-base">₹{debt.remaining_amount}</div>
-                    <StatusBadge status={debt.status || 'pending'} />
+                    <div className="font-mono font-bold text-base text-red-700">₹{debt.remaining_amount}</div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Show who owes you */}
+              {peopleWhoOweMe.map((debt: any) => (
+                <div key={debt.id} className="flex items-center justify-between p-3 border-2 border-black bg-[#F5E600]/40 hover:bg-[#F5E600] transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 bg-black text-white flex items-center justify-center font-bold uppercase rounded-none border border-black">
+                      {debt.debtor?.display_name?.[0] || 'D'}
+                    </div>
+                    <div>
+                      <div className="font-extrabold uppercase text-xs text-black">
+                        <span>{debt.debtor?.display_name || 'Roommate'}</span> owes you
+                      </div>
+                      <div className="text-[10px] font-bold uppercase text-gray-600">
+                        {debt.description || 'Expense share'}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-mono font-bold text-base text-green-700">₹{debt.remaining_amount}</div>
                   </div>
                 </div>
               ))}
