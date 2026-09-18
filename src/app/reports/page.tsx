@@ -196,7 +196,7 @@ export default function ReportsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-4 border-black pb-3 gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-black flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-extrabold uppercase tracking-tight text-black flex items-center gap-2">
             <BarChart3 className="text-black" size={32} />
             Financial Reports
           </h1>

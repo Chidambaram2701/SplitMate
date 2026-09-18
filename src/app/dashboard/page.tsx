@@ -199,7 +199,7 @@ export default function DashboardPage() {
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-4 border-black pb-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-black flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-extrabold uppercase tracking-tight text-black flex items-center gap-2">
             <Home className="hidden sm:inline-block" size={28} />
             {houseName || 'House'} Terminal
           </h1>

@@ -155,7 +155,7 @@ export default function ExpensesPage() {
   return (
     <div className="space-y-6 text-black pb-12">
       <div className="flex items-center justify-between border-b-4 border-black pb-2">
-        <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-black flex items-center gap-2">
+        <h1 className="text-xl sm:text-2xl font-extrabold uppercase tracking-tight text-black flex items-center gap-2">
           <Receipt size={28} className="hidden sm:inline-block" />
           Expenses Ledger
         </h1>

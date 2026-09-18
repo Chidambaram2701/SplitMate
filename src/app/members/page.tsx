@@ -131,7 +131,7 @@ export default function MembersPage() {
   return (
     <div className="space-y-6 text-black pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b-4 border-black pb-3">
-        <h1 className="text-xl sm:text-3xl font-black uppercase tracking-tight text-black">
+        <h1 className="text-xl sm:text-2xl font-extrabold uppercase tracking-tight text-black">
           House Members
         </h1>
         <Button variant="brutalAccent" size="sm" asChild className="self-start sm:self-auto touch-target">
@@ -220,15 +220,15 @@ export default function MembersPage() {
         <h2 className="text-lg sm:text-2xl font-black uppercase mb-3 sm:mb-4 border-b-2 border-black pb-2">House Statistics</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <div className="flex sm:block items-center justify-between border-b sm:border-b-0 pb-2 sm:pb-0 border-black/20">
-            <div className="text-2xl sm:text-4xl font-mono font-extrabold uppercase">{activeMembers.length}</div>
+            <div className="text-xl sm:text-2xl font-mono font-extrabold uppercase">{activeMembers.length}</div>
             <div className="text-[10px] sm:text-xs font-extrabold uppercase">Total House Members</div>
           </div>
           <div className="flex sm:block items-center justify-between border-b sm:border-b-0 pb-2 sm:pb-0 border-black/20">
-            <div className="text-2xl sm:text-4xl font-mono font-extrabold uppercase">{admins.length}</div>
+            <div className="text-xl sm:text-2xl font-mono font-extrabold uppercase">{admins.length}</div>
             <div className="text-[10px] sm:text-xs font-extrabold uppercase">Administrators</div>
           </div>
           <div className="flex sm:block items-center justify-between">
-            <div className="text-2xl sm:text-4xl font-mono font-extrabold uppercase">{regularMembers.length}</div>
+            <div className="text-xl sm:text-2xl font-mono font-extrabold uppercase">{regularMembers.length}</div>
             <div className="text-[10px] sm:text-xs font-extrabold uppercase">Regular Members</div>
           </div>
         </div>
