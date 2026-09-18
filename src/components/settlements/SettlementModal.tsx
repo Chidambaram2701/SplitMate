@@ -20,22 +20,29 @@ interface SettlementModalProps {
     debtor_name?: string;
     isIOwe: boolean;
   } | null;
+  initialMode?: 'full' | 'partial';
   onSuccess: () => void;
 }
 
-export function SettlementModal({ isOpen, onClose, debt, onSuccess }: SettlementModalProps) {
-  const [paymentMode, setPaymentMode] = useState<'full' | 'partial'>('full');
+export function SettlementModal({ isOpen, onClose, debt, initialMode = 'full', onSuccess }: SettlementModalProps) {
+  const [paymentMode, setPaymentMode] = useState<'full' | 'partial'>(initialMode);
   const [customAmount, setCustomAmount] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (debt) {
-      setPaymentMode('full');
-      setCustomAmount('');
+      const remainingVal = Number(debt.remaining_amount) || 0;
+      setPaymentMode(initialMode);
+      if (initialMode === 'partial') {
+        const half = Math.round(remainingVal / 2);
+        setCustomAmount(half > 0 ? half.toString() : '');
+      } else {
+        setCustomAmount('');
+      }
       setError(null);
     }
-  }, [debt]);
+  }, [debt, initialMode]);
 
   if (!isOpen || !debt) return null;
 
@@ -199,7 +206,7 @@ export function SettlementModal({ isOpen, onClose, debt, onSuccess }: Settlement
 
           {/* Custom Partial Amount Input */}
           {paymentMode === 'partial' && (
-            <div className="space-y-2 bg-yellow-50 p-4 border-2 border-black">
+            <div className="space-y-3 bg-yellow-50 p-4 border-2 border-black">
               <Label htmlFor="customAmount" required className="text-xs font-extrabold uppercase">
                 Enter Partial Amount Paid (₹)
               </Label>
@@ -218,6 +225,22 @@ export function SettlementModal({ isOpen, onClose, debt, onSuccess }: Settlement
                 autoFocus
                 className="bg-white touch-target font-mono text-base font-bold"
               />
+              <div className="flex items-center gap-2 pt-1">
+                <span className="text-[10px] font-extrabold uppercase text-gray-700">Quick:</span>
+                {[0.25, 0.5, 0.75].map((factor) => {
+                  const val = Math.round(remaining * factor);
+                  return (
+                    <button
+                      key={factor}
+                      type="button"
+                      onClick={() => setCustomAmount(val.toString())}
+                      className="px-2 py-1 text-[10px] font-extrabold uppercase bg-white border border-black hover:bg-[#F5E600] transition-colors cursor-pointer"
+                    >
+                      {factor * 100}% (₹{val})
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
 

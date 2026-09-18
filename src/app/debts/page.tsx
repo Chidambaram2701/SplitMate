@@ -90,15 +90,18 @@ export default function DebtsPage() {
     }
   }
 
-  const openSettlementModal = (debt: any, isIOwe: boolean) => {
+  const openSettlementModal = (debt: any, isIOwe: boolean, initialMode: 'full' | 'partial' = 'full') => {
     setSelectedDebtForSettlement({
-      id: debt.id,
-      description: debt.description,
-      original_amount: debt.original_amount,
-      remaining_amount: debt.remaining_amount,
-      creditor_name: debt.creditor?.display_name,
-      debtor_name: debt.debtor?.display_name,
-      isIOwe,
+      debt: {
+        id: debt.id,
+        description: debt.description,
+        original_amount: debt.original_amount,
+        remaining_amount: debt.remaining_amount,
+        creditor_name: debt.creditor?.display_name,
+        debtor_name: debt.debtor?.display_name,
+        isIOwe,
+      },
+      initialMode,
     });
   };
 
@@ -286,19 +289,30 @@ export default function DebtsPage() {
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center text-xs pt-1">
+                    <div className="flex flex-wrap justify-between items-center text-xs pt-1 gap-2">
                       <span className="font-mono text-gray-600 text-[10px] sm:text-xs">
                         {debt.created_at ? `Created: ${new Date(debt.created_at).toLocaleDateString('en-IN')}` : ''}
                       </span>
-                      <Button
-                        variant="brutalPrimary"
-                        size="sm"
-                        onClick={() => openSettlementModal(debt, true)}
-                        className="gap-1.5 touch-target"
-                      >
-                        <CheckCircle2 size={14} />
-                        Settle Up / Paid
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="brutalAccent"
+                          size="sm"
+                          onClick={() => openSettlementModal(debt, true, 'partial')}
+                          className="gap-1 touch-target text-[11px]"
+                        >
+                          <DollarSign size={13} />
+                          Partial Pay
+                        </Button>
+                        <Button
+                          variant="brutalPrimary"
+                          size="sm"
+                          onClick={() => openSettlementModal(debt, true, 'full')}
+                          className="gap-1 touch-target text-[11px]"
+                        >
+                          <CheckCircle2 size={13} />
+                          Settle Full
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -364,19 +378,30 @@ export default function DebtsPage() {
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center text-xs pt-1">
+                    <div className="flex flex-wrap justify-between items-center text-xs pt-1 gap-2">
                       <span className="font-mono text-gray-600 text-[10px] sm:text-xs">
                         {debt.created_at ? `Created: ${new Date(debt.created_at).toLocaleDateString('en-IN')}` : ''}
                       </span>
-                      <Button
-                        variant="brutalSuccess"
-                        size="sm"
-                        onClick={() => openSettlementModal(debt, false)}
-                        className="gap-1.5 touch-target"
-                      >
-                        <CheckCircle2 size={14} />
-                        Record Payment
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="brutal"
+                          size="sm"
+                          onClick={() => openSettlementModal(debt, false, 'partial')}
+                          className="gap-1 touch-target text-[11px]"
+                        >
+                          <DollarSign size={13} />
+                          Partial Pay
+                        </Button>
+                        <Button
+                          variant="brutalSuccess"
+                          size="sm"
+                          onClick={() => openSettlementModal(debt, false, 'full')}
+                          className="gap-1 touch-target text-[11px]"
+                        >
+                          <CheckCircle2 size={13} />
+                          Full Settle
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -390,7 +415,8 @@ export default function DebtsPage() {
       <SettlementModal
         isOpen={Boolean(selectedDebtForSettlement)}
         onClose={() => setSelectedDebtForSettlement(null)}
-        debt={selectedDebtForSettlement}
+        debt={selectedDebtForSettlement?.debt || null}
+        initialMode={selectedDebtForSettlement?.initialMode || 'full'}
         onSuccess={loadDebts}
       />
     </div>
