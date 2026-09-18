@@ -333,9 +333,25 @@ export default function CreateExpensePage() {
               <Label required className="text-sm sm:text-base font-extrabold">
                 Who is this expense for?
               </Label>
-              <span className="font-mono font-bold text-xs bg-[#F5E600] px-2 py-1 border border-black self-start sm:self-auto">
-                {selectedMembers.length} member{selectedMembers.length !== 1 && 's'} selected
-              </span>
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setSelectedMembers(members.map((m) => m.id))}
+                  className="text-[10px] font-extrabold uppercase px-2 py-1 bg-black text-white border border-black hover:bg-gray-800 transition-colors cursor-pointer"
+                >
+                  Select All
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedMembers([])}
+                  className="text-[10px] font-extrabold uppercase px-2 py-1 bg-white text-black border border-black hover:bg-gray-100 transition-colors cursor-pointer"
+                >
+                  Clear All
+                </button>
+                <span className="font-mono font-bold text-xs bg-[#F5E600] px-2 py-1 border border-black">
+                  {selectedMembers.length} selected
+                </span>
+              </div>
             </div>
 
             {fetchingMembers ? (
@@ -357,7 +373,7 @@ export default function CreateExpensePage() {
                       type="button"
                       onClick={() => toggleMember(member.id)}
                       className={`
-                        flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 border-2 text-left transition-all cursor-pointer
+                        flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 border-2 text-left transition-all cursor-pointer min-h-[44px]
                         ${
                           isSelected
                             ? 'border-black bg-[#F5E600] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]'

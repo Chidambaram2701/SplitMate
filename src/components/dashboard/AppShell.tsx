@@ -7,6 +7,7 @@ import { Sidebar } from '@/components/dashboard/Sidebar';
 import { HouseSwitcher } from '@/components/dashboard/HouseSwitcher';
 import { UserProfile } from '@/components/dashboard/UserProfile';
 import { ToastContainer } from '@/components/dashboard/ToastContainer';
+import { MobileBottomNav } from '@/components/dashboard/MobileBottomNav';
 import { Menu, X } from 'lucide-react';
 import Link from 'next/link';
 
@@ -83,12 +84,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
 
         {/* Main Content Viewport */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#F4F1EA]">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 pb-24 md:pb-6 bg-[#F4F1EA]">
           <div className="max-w-7xl mx-auto w-full">
             {children}
           </div>
         </main>
       </div>
+
+      {/* Mobile Fixed Bottom Navigation Bar */}
+      <MobileBottomNav />
 
       <ToastContainer />
     </div>

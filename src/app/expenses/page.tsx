@@ -5,13 +5,16 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { MoneyDisplay } from '@/components/ui/money-display';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, Home } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Plus, Trash2, Home, Search, Filter, Receipt } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasHouse, setHasHouse] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   useEffect(() => {
     loadExpenses();
@@ -52,7 +55,7 @@ export default function ExpensesPage() {
 
       const { data: expensesData, error } = await supabase
         .from('expenses')
-        .select('id, description, total_amount, date, created_at, paid_by')
+        .select('id, description, total_amount, date, category, created_at, paid_by')
         .eq('house_id', houseId)
         .order('created_at', { ascending: false });
 
@@ -94,7 +97,7 @@ export default function ExpensesPage() {
   }
 
   const handleDelete = async (expenseId: string) => {
-    if (!confirm('Are you sure you want to delete this expense?')) return;
+    if (!confirm('Are you sure you want to delete this expense record?')) return;
 
     const { error } = await supabase
       .from('expenses')
@@ -105,6 +108,19 @@ export default function ExpensesPage() {
       loadExpenses();
     }
   };
+
+  const filteredExpenses = expenses.filter((e: any) => {
+    const matchesSearch =
+      e.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      e.paid_by?.display_name?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesCategory =
+      selectedCategory === 'all' || (e.category || 'general').toLowerCase() === selectedCategory.toLowerCase();
+
+    return matchesSearch && matchesCategory;
+  });
+
+  const totalAmount = filteredExpenses.reduce((sum: number, e: any) => sum + Number(e.total_amount || 0), 0);
 
   if (loading) {
     return (
@@ -136,15 +152,14 @@ export default function ExpensesPage() {
     );
   }
 
-  const totalAmount = expenses.reduce((sum: number, e: any) => sum + Number(e.total_amount || 0), 0);
-
   return (
-    <div className="space-y-6 text-black">
+    <div className="space-y-6 text-black pb-12">
       <div className="flex items-center justify-between border-b-4 border-black pb-2">
-        <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-black">
+        <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-black flex items-center gap-2">
+          <Receipt size={28} className="hidden sm:inline-block" />
           Expenses Ledger
         </h1>
-        <Button variant="brutalAccent" size="sm" asChild>
+        <Button variant="brutalAccent" size="sm" asChild className="touch-target">
           <Link href="/expenses/new">
             <Plus size={16} />
             Add Expense
@@ -152,56 +167,95 @@ export default function ExpensesPage() {
         </Button>
       </div>
 
-      <div className="border-4 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-6 border-b-2 border-black pb-4">
+      <div className="border-4 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] sm:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-4 sm:p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-black pb-4">
           <div>
             <h2 className="text-base sm:text-lg font-extrabold uppercase text-black">Total House Expenses</h2>
-            <p className="text-[11px] uppercase font-bold text-gray-700">Cumulative record</p>
+            <p className="text-[11px] uppercase font-bold text-gray-700">Cumulative record ({filteredExpenses.length} entries)</p>
           </div>
           <MoneyDisplay amount={totalAmount} size="lg" />
         </div>
 
-        {expenses.length === 0 ? (
+        {/* Search & Category Filter */}
+        <div className="space-y-3 bg-[#F4F1EA] p-3 border-2 border-black">
+          <div className="relative">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
+            <input
+              type="text"
+              placeholder="Search by expense name or paid by roommate..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-white border-2 border-black text-xs sm:text-sm font-extrabold uppercase placeholder:normal-case placeholder:font-normal placeholder:text-gray-500 focus:outline-none focus:bg-[#F5E600]/20"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+            <Filter size={14} className="flex-shrink-0 text-black ml-1" />
+            {['all', 'general', 'groceries', 'utilities', 'rent', 'dining'].map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3 py-1 font-extrabold uppercase border border-black transition-all flex-shrink-0 cursor-pointer ${
+                  selectedCategory === cat
+                    ? 'bg-black text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
+                    : 'bg-white text-black hover:bg-gray-100'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {filteredExpenses.length === 0 ? (
           <div className="py-12 text-center">
-            <div className="border-4 border-black bg-[#F5E600] p-6 inline-block shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-              <p className="font-extrabold uppercase text-base mb-2 text-black">No Expenses Logged Yet</p>
+            <div className="border-4 border-black bg-[#F5E600] p-6 inline-block shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] max-w-md">
+              <p className="font-extrabold uppercase text-base mb-2 text-black">No Expenses Found</p>
               <p className="text-xs font-bold uppercase text-black mb-4">
-                Your house ledger is empty. Click below to add your first expense!
+                {searchQuery || selectedCategory !== 'all'
+                  ? 'No matching expenses for the applied filter.'
+                  : 'Your house ledger is empty. Click below to add your first expense!'}
               </p>
-              <Button variant="brutalPrimary" size="sm" asChild>
+              <Button variant="brutalPrimary" size="sm" asChild className="touch-target">
                 <Link href="/expenses/new">
                   <Plus size={16} />
-                  Add First Expense
+                  Add Expense
                 </Link>
               </Button>
             </div>
           </div>
         ) : (
           <div className="space-y-3">
-            {expenses.map((expense: any) => (
+            {filteredExpenses.map((expense: any) => (
               <div
                 key={expense.id}
-                className="flex items-center justify-between p-3 sm:p-4 border-2 border-black bg-white hover:bg-[#F5E600] transition-colors"
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border-2 border-black bg-white hover:bg-[#F5E600]/30 transition-colors gap-3"
               >
-                <div className="flex items-center gap-3 sm:gap-4">
+                <div className="flex items-start sm:items-center gap-3 sm:gap-4">
                   <div className="h-10 w-10 sm:h-12 sm:w-12 bg-black text-white flex items-center justify-center font-extrabold uppercase text-sm sm:text-base border-2 border-black flex-shrink-0">
-                    E
+                    {expense.description?.[0] || 'E'}
                   </div>
-                  <div>
-                    <div className="font-bold uppercase text-sm sm:text-base text-black">{expense.description}</div>
-                    <div className="text-[11px] font-bold uppercase text-gray-700 flex items-center gap-2 mt-0.5">
-                      <span>Paid by: {expense.paid_by?.display_name || 'Member'}</span>
-                      <span>|</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-extrabold uppercase text-sm sm:text-base text-black truncate">{expense.description}</div>
+                    <div className="text-[11px] font-bold uppercase text-gray-700 flex flex-wrap items-center gap-2 mt-0.5">
+                      <span>Paid by: <strong className="text-black">{expense.paid_by?.display_name || 'Member'}</strong></span>
+                      <span>•</span>
                       <span>{new Date(expense.date).toLocaleDateString('en-IN')}</span>
+                      {expense.category && (
+                        <span className="bg-black text-white px-1.5 py-0.5 text-[9px] uppercase font-mono">
+                          {expense.category}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <div className="font-mono font-bold text-xl text-black">₹{expense.total_amount}</div>
-                    <div className="text-xs font-bold uppercase text-gray-600">{new Date(expense.created_at).toLocaleDateString('en-IN')}</div>
+
+                <div className="flex items-center justify-between sm:justify-end gap-4 border-t sm:border-t-0 pt-2 sm:pt-0 border-black/10">
+                  <div className="text-left sm:text-right">
+                    <div className="font-mono font-bold text-lg sm:text-xl text-black">₹{expense.total_amount}</div>
                   </div>
-                  <Button variant="brutalDanger" size="icon" onClick={() => handleDelete(expense.id)}>
+                  <Button variant="brutalDanger" size="icon" onClick={() => handleDelete(expense.id)} className="touch-target">
                     <Trash2 size={16} />
                   </Button>
                 </div>

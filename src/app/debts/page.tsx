@@ -162,9 +162,9 @@ export default function DebtsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         {/* You Owe */}
-        <div className="border-4 border-black bg-black text-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6 flex flex-col justify-between">
+        <div className="border-4 border-black bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] sm:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-5 sm:p-6 flex flex-col justify-between">
           <div>
             <div className="mb-2 border-b-2 border-white pb-2 flex justify-between items-center">
               <h3 className="text-base font-bold uppercase text-white">You Owe Others</h3>
@@ -178,7 +178,7 @@ export default function DebtsPage() {
         </div>
 
         {/* You Receive */}
-        <div className="border-4 border-black bg-[#F5E600] text-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6 flex flex-col justify-between">
+        <div className="border-4 border-black bg-[#F5E600] text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] sm:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-5 sm:p-6 flex flex-col justify-between">
           <div>
             <div className="mb-2 border-b-2 border-black pb-2 flex justify-between items-center">
               <h3 className="text-base font-extrabold uppercase text-black">Others Owe You</h3>
@@ -192,7 +192,7 @@ export default function DebtsPage() {
         </div>
 
         {/* Net Standing */}
-        <div className="border-4 border-black bg-white text-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6 flex flex-col justify-between">
+        <div className="border-4 border-black bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] sm:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-5 sm:p-6 flex flex-col justify-between">
           <div>
             <div className="mb-2 border-b-2 border-black pb-2">
               <h3 className="text-base font-extrabold uppercase text-black">Net Position</h3>
@@ -208,11 +208,11 @@ export default function DebtsPage() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-2 border-b-4 border-black pb-3 overflow-x-auto">
+      <div className="flex gap-2 border-b-4 border-black pb-3 overflow-x-auto text-xs">
         <button
           type="button"
           onClick={() => setActiveTab('all')}
-          className={`px-4 py-2 font-extrabold uppercase text-xs border-2 border-black transition-all ${
+          className={`px-3 sm:px-4 py-2 font-extrabold uppercase border-2 border-black transition-all flex-shrink-0 cursor-pointer ${
             activeTab === 'all' ? 'bg-black text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'bg-white text-black hover:bg-gray-100'
           }`}
         >
@@ -221,32 +221,32 @@ export default function DebtsPage() {
         <button
           type="button"
           onClick={() => setActiveTab('owe')}
-          className={`px-4 py-2 font-extrabold uppercase text-xs border-2 border-black transition-all ${
+          className={`px-3 sm:px-4 py-2 font-extrabold uppercase border-2 border-black transition-all flex-shrink-0 cursor-pointer ${
             activeTab === 'owe' ? 'bg-[#FF0000] text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'bg-white text-black hover:bg-gray-100'
           }`}
         >
-          Money You Owe ({activeIOwe.length})
+          You Owe ({activeIOwe.length})
         </button>
         <button
           type="button"
           onClick={() => setActiveTab('receive')}
-          className={`px-4 py-2 font-extrabold uppercase text-xs border-2 border-black transition-all ${
+          className={`px-3 sm:px-4 py-2 font-extrabold uppercase border-2 border-black transition-all flex-shrink-0 cursor-pointer ${
             activeTab === 'receive' ? 'bg-[#F5E600] text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'bg-white text-black hover:bg-gray-100'
           }`}
         >
-          Money Owed To You ({activeTheyOweMe.length})
+          Owed To You ({activeTheyOweMe.length})
         </button>
       </div>
 
       {/* Section 1: Money You Owe (Liabilities) */}
       {(activeTab === 'all' || activeTab === 'owe') && (
-        <div className="border-4 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6 space-y-4">
+        <div className="border-4 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] sm:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-4 sm:p-6 space-y-4">
           <div className="flex items-center justify-between border-b-2 border-black pb-3">
-            <h2 className="text-xl sm:text-2xl font-extrabold uppercase text-black flex items-center gap-2">
+            <h2 className="text-lg sm:text-xl font-extrabold uppercase text-black flex items-center gap-2">
               <ArrowUpRight className="text-red-600" size={24} />
               Money You Owe To Roommates
             </h2>
-            <span className="font-mono font-bold text-sm bg-red-100 border border-black px-2 py-0.5 text-black">
+            <span className="font-mono font-bold text-xs sm:text-sm bg-red-100 border border-black px-2 py-0.5 text-black">
               Total: ₹{totalIOwe}
             </span>
           </div>
@@ -262,15 +262,15 @@ export default function DebtsPage() {
                 return (
                   <div
                     key={debt.id}
-                    className="p-4 border-2 border-black bg-red-50 hover:bg-red-100 transition-colors space-y-3"
+                    className="p-3 sm:p-4 border-2 border-black bg-red-50 hover:bg-red-100 transition-colors space-y-3"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-black/20 pb-2">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-red-600 text-white flex items-center justify-center font-extrabold uppercase border border-black flex-shrink-0">
+                        <div className="h-9 w-9 sm:h-10 sm:w-10 bg-red-600 text-white flex items-center justify-center font-extrabold uppercase border border-black flex-shrink-0">
                           {creditorName[0]}
                         </div>
                         <div>
-                          <div className="font-extrabold uppercase text-base text-black">
+                          <div className="font-extrabold uppercase text-sm sm:text-base text-black">
                             You owe <span className="text-red-700 underline">{creditorName}</span>
                           </div>
                           <div className="text-xs font-bold text-gray-700 mt-0.5">
@@ -278,8 +278,8 @@ export default function DebtsPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="text-right flex-shrink-0">
-                        <div className="font-mono font-extrabold text-2xl text-red-700">
+                      <div className="text-left sm:text-right flex-shrink-0">
+                        <div className="font-mono font-extrabold text-xl sm:text-2xl text-red-700">
                           ₹{debt.remaining_amount}
                         </div>
                         <div className="text-[10px] uppercase font-bold text-gray-600">
@@ -288,18 +288,18 @@ export default function DebtsPage() {
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-mono text-gray-600">
+                    <div className="flex justify-between items-center text-xs pt-1">
+                      <span className="font-mono text-gray-600 text-[10px] sm:text-xs">
                         {debt.created_at ? `Created: ${new Date(debt.created_at).toLocaleDateString('en-IN')}` : ''}
                       </span>
                       <Button
                         variant="brutalPrimary"
                         size="sm"
                         onClick={() => handleSettleUp(debt.id)}
-                        className="gap-1.5"
+                        className="gap-1.5 touch-target"
                       >
                         <CheckCircle2 size={14} />
-                        Settle Up / Paid
+                        Settle Up
                       </Button>
                     </div>
                   </div>
@@ -312,13 +312,13 @@ export default function DebtsPage() {
 
       {/* Section 2: Money Owed to You (Receivables) */}
       {(activeTab === 'all' || activeTab === 'receive') && (
-        <div className="border-4 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6 space-y-4">
+        <div className="border-4 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] sm:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-4 sm:p-6 space-y-4">
           <div className="flex items-center justify-between border-b-2 border-black pb-3">
-            <h2 className="text-xl sm:text-2xl font-extrabold uppercase text-black flex items-center gap-2">
+            <h2 className="text-lg sm:text-xl font-extrabold uppercase text-black flex items-center gap-2">
               <ArrowDownRight className="text-green-700" size={24} />
               Money Roommates Owe To You
             </h2>
-            <span className="font-mono font-bold text-sm bg-[#F5E600] border border-black px-2 py-0.5 text-black">
+            <span className="font-mono font-bold text-xs sm:text-sm bg-[#F5E600] border border-black px-2 py-0.5 text-black">
               Total: ₹{totalIReceive}
             </span>
           </div>
@@ -334,15 +334,15 @@ export default function DebtsPage() {
                 return (
                   <div
                     key={debt.id}
-                    className="p-4 border-2 border-black bg-[#F5E600]/30 hover:bg-[#F5E600]/60 transition-colors space-y-3"
+                    className="p-3 sm:p-4 border-2 border-black bg-[#F5E600]/30 hover:bg-[#F5E600]/60 transition-colors space-y-3"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-black/20 pb-2">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-black text-white flex items-center justify-center font-extrabold uppercase border border-black flex-shrink-0">
+                        <div className="h-9 w-9 sm:h-10 sm:w-10 bg-black text-white flex items-center justify-center font-extrabold uppercase border border-black flex-shrink-0">
                           {debtorName[0]}
                         </div>
                         <div>
-                          <div className="font-extrabold uppercase text-base text-black">
+                          <div className="font-extrabold uppercase text-sm sm:text-base text-black">
                             <span className="underline">{debtorName}</span> owes you
                           </div>
                           <div className="text-xs font-bold text-gray-700 mt-0.5">
@@ -350,8 +350,8 @@ export default function DebtsPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="text-right flex-shrink-0">
-                        <div className="font-mono font-extrabold text-2xl text-green-700">
+                      <div className="text-left sm:text-right flex-shrink-0">
+                        <div className="font-mono font-extrabold text-xl sm:text-2xl text-green-700">
                           ₹{debt.remaining_amount}
                         </div>
                         <div className="text-[10px] uppercase font-bold text-gray-600">
@@ -360,15 +360,15 @@ export default function DebtsPage() {
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-mono text-gray-600">
+                    <div className="flex justify-between items-center text-xs pt-1">
+                      <span className="font-mono text-gray-600 text-[10px] sm:text-xs">
                         {debt.created_at ? `Created: ${new Date(debt.created_at).toLocaleDateString('en-IN')}` : ''}
                       </span>
                       <Button
                         variant="brutalSuccess"
                         size="sm"
                         onClick={() => handleSettleUp(debt.id)}
-                        className="gap-1.5"
+                        className="gap-1.5 touch-target"
                       >
                         <CheckCircle2 size={14} />
                         Mark Received
@@ -383,4 +383,5 @@ export default function DebtsPage() {
       )}
     </div>
   );
+}
 }

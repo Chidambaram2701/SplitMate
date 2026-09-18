@@ -422,3 +422,37 @@ code, pre, tt {
 .m-b-sm { margin-bottom: var(--spacing-sm); }
 .m-r-sm { margin-right: var(--spacing-sm); }
 .m-l-sm { margin-left: var(--spacing-sm); }
+
+/* Touch Target & Mobile UX Utilities */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Safe padding for iOS devices with notch / bottom home bar */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
+}
+
+/* Custom Scrollbar for sleek mobile/desktop experience */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F4F1EA;
+  border-left: 1px solid #111111;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #111111;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #F5E600;
+}
+

@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { UserPlus, ArrowLeft, Copy, Mail, Check } from 'lucide-react';
+import { UserPlus, ArrowLeft, Copy, Mail, Check, Share2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function InviteMemberPage() {
@@ -84,7 +84,7 @@ export default function InviteMemberPage() {
         if (inviteError) console.warn('Invitation logging:', inviteError);
 
         setMessage({
-          text: `Invitation link generated! You can copy the link below or send it directly via Email.`,
+          text: `Invitation link generated! You can copy or share the link below.`,
           type: 'success',
         });
       }
@@ -103,6 +103,23 @@ export default function InviteMemberPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleShare = async () => {
+    if (!inviteUrl) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Join our house on RoommateX!',
+          text: 'Hey! Join our shared house finance workspace on RoommateX:',
+          url: inviteUrl,
+        });
+      } catch (err) {
+        copyToClipboard();
+      }
+    } else {
+      copyToClipboard();
+    }
+  };
+
   const sendEmail = () => {
     if (!inviteUrl || !email) return;
     const subject = encodeURIComponent('Join our house on RoommateX!');
@@ -113,22 +130,22 @@ export default function InviteMemberPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 text-black">
+    <div className="max-w-2xl mx-auto space-y-6 text-black pb-12">
       <div className="flex items-center justify-between border-b-4 border-black pb-4">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-[#F5E600] border-2 border-black">
             <UserPlus size={28} className="text-black" />
           </div>
           <div>
-            <h1 className="text-3xl font-extrabold uppercase tracking-tight text-black">
-              Invite House Member
+            <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-black">
+              Invite Roommate
             </h1>
-            <p className="text-xs font-bold uppercase tracking-widest text-gray-700">
-              Add your roommates to split bills and manage finances
+            <p className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-gray-700">
+              Add your roommates to split bills easily
             </p>
           </div>
         </div>
-        <Button variant="brutal" asChild>
+        <Button variant="brutal" asChild className="touch-target">
           <Link href="/members" className="flex items-center gap-2">
             <ArrowLeft size={16} />
             Back
@@ -136,7 +153,7 @@ export default function InviteMemberPage() {
         </Button>
       </div>
 
-      <div className="border-4 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-8">
+      <div className="border-4 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] sm:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-4 sm:p-8">
         {message && (
           <div
             className={`mb-6 border-4 p-4 font-bold uppercase text-xs space-y-2 ${
@@ -162,31 +179,31 @@ export default function InviteMemberPage() {
               placeholder="e.g. roommate@college.edu"
               required
               disabled={loading}
-              className="mt-1"
+              className="mt-1 touch-target"
             />
           </div>
 
-          <div className="pt-2 flex items-center justify-end gap-4">
-            <Button variant="brutal" asChild disabled={loading}>
+          <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
+            <Button variant="brutal" asChild disabled={loading} className="touch-target order-2 sm:order-1">
               <Link href="/members">Cancel</Link>
             </Button>
             <Button
               type="submit"
               variant="brutalAccent"
               disabled={loading || !email.trim()}
-              className="px-8"
+              className="px-8 touch-target order-1 sm:order-2"
             >
-              {loading ? 'Generating Invitation...' : 'Generate Invite Link'}
+              {loading ? 'Generating Link...' : 'Generate Invite Link'}
             </Button>
           </div>
         </form>
 
         {/* Shareable Link Box */}
         {inviteUrl && (
-          <div className="mt-8 border-4 border-black bg-[#F5E600] p-6 space-y-4">
+          <div className="mt-8 border-4 border-black bg-[#F5E600] p-4 sm:p-6 space-y-4">
             <h3 className="font-extrabold uppercase text-lg text-black">Share Invite Link</h3>
             <p className="text-xs font-bold uppercase text-black">
-              Send this link to your roommate so they can accept and join your house instantly:
+              Send this link to your roommate so they can join your house instantly:
             </p>
 
             <div className="flex items-center gap-2 bg-white border-2 border-black p-2">
@@ -198,14 +215,18 @@ export default function InviteMemberPage() {
               />
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <Button variant="brutalPrimary" size="sm" onClick={copyToClipboard} className="flex-1">
-                {copied ? <Check size={16} /> : <Copy size={16} />}
-                {copied ? 'Copied!' : 'Copy Link'}
+            <div className="flex flex-wrap gap-2">
+              <Button variant="brutalPrimary" size="sm" onClick={handleShare} className="flex-1 touch-target">
+                <Share2 size={16} />
+                Share Link
               </Button>
-              <Button variant="brutal" size="sm" onClick={sendEmail} className="flex-1">
+              <Button variant="brutal" size="sm" onClick={copyToClipboard} className="flex-1 touch-target">
+                {copied ? <Check size={16} /> : <Copy size={16} />}
+                {copied ? 'Copied!' : 'Copy'}
+              </Button>
+              <Button variant="brutal" size="sm" onClick={sendEmail} className="flex-1 touch-target">
                 <Mail size={16} />
-                Send via Email
+                Email
               </Button>
             </div>
           </div>
