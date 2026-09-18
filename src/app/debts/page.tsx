@@ -1,12 +1,10 @@
-// Debts Page - Detailed Breakdown of Who You Owe and Who Owes You
-'use client';
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { MoneyDisplay } from '@/components/ui/money-display';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Button } from '@/components/ui/button';
-import { Plus, AlertTriangle, Home, ArrowUpRight, ArrowDownRight, CheckCircle2 } from 'lucide-react';
+import { SettlementModal } from '@/components/settlements/SettlementModal';
+import { Plus, AlertTriangle, Home, ArrowUpRight, ArrowDownRight, CheckCircle2, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DebtsPage() {
@@ -15,6 +13,7 @@ export default function DebtsPage() {
   const [loading, setLoading] = useState(true);
   const [hasHouse, setHasHouse] = useState(true);
   const [activeTab, setActiveTab] = useState<'all' | 'owe' | 'receive'>('all');
+  const [selectedDebtForSettlement, setSelectedDebtForSettlement] = useState<any | null>(null);
 
   useEffect(() => {
     loadDebts();
@@ -91,23 +90,16 @@ export default function DebtsPage() {
     }
   }
 
-  const handleSettleUp = async (debtId: string) => {
-    if (!confirm('Mark this debt as fully settled?')) return;
-    try {
-      const { error } = await supabase
-        .from('debts')
-        .update({
-          remaining_amount: 0,
-          status: 'settled',
-        })
-        .eq('id', debtId);
-
-      if (!error) {
-        loadDebts();
-      }
-    } catch (err) {
-      console.error('Error settling debt:', err);
-    }
+  const openSettlementModal = (debt: any, isIOwe: boolean) => {
+    setSelectedDebtForSettlement({
+      id: debt.id,
+      description: debt.description,
+      original_amount: debt.original_amount,
+      remaining_amount: debt.remaining_amount,
+      creditor_name: debt.creditor?.display_name,
+      debtor_name: debt.debtor?.display_name,
+      isIOwe,
+    });
   };
 
   if (loading) {
@@ -259,6 +251,7 @@ export default function DebtsPage() {
             <div className="space-y-3">
               {activeIOwe.map((debt: any) => {
                 const creditorName = debt.creditor?.display_name || debt.creditor?.email?.split('@')[0] || 'Roommate';
+                const isPartial = debt.status === 'partial' || Number(debt.remaining_amount) < Number(debt.original_amount);
                 return (
                   <div
                     key={debt.id}
@@ -270,8 +263,13 @@ export default function DebtsPage() {
                           {creditorName[0]}
                         </div>
                         <div>
-                          <div className="font-extrabold uppercase text-sm sm:text-base text-black">
-                            You owe <span className="text-red-700 underline">{creditorName}</span>
+                          <div className="font-extrabold uppercase text-sm sm:text-base text-black flex items-center gap-2">
+                            <span>You owe <span className="text-red-700 underline">{creditorName}</span></span>
+                            {isPartial && (
+                              <span className="text-[9px] font-mono uppercase bg-[#F5E600] text-black px-1.5 py-0.5 border border-black">
+                                Partial Paid
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs font-bold text-gray-700 mt-0.5">
                             Reason: {debt.description || 'Expense split share'}
@@ -295,11 +293,11 @@ export default function DebtsPage() {
                       <Button
                         variant="brutalPrimary"
                         size="sm"
-                        onClick={() => handleSettleUp(debt.id)}
+                        onClick={() => openSettlementModal(debt, true)}
                         className="gap-1.5 touch-target"
                       >
                         <CheckCircle2 size={14} />
-                        Settle Up
+                        Settle Up / Paid
                       </Button>
                     </div>
                   </div>
@@ -331,6 +329,7 @@ export default function DebtsPage() {
             <div className="space-y-3">
               {activeTheyOweMe.map((debt: any) => {
                 const debtorName = debt.debtor?.display_name || debt.debtor?.email?.split('@')[0] || 'Roommate';
+                const isPartial = debt.status === 'partial' || Number(debt.remaining_amount) < Number(debt.original_amount);
                 return (
                   <div
                     key={debt.id}
@@ -342,8 +341,13 @@ export default function DebtsPage() {
                           {debtorName[0]}
                         </div>
                         <div>
-                          <div className="font-extrabold uppercase text-sm sm:text-base text-black">
-                            <span className="underline">{debtorName}</span> owes you
+                          <div className="font-extrabold uppercase text-sm sm:text-base text-black flex items-center gap-2">
+                            <span><span className="underline">{debtorName}</span> owes you</span>
+                            {isPartial && (
+                              <span className="text-[9px] font-mono uppercase bg-black text-white px-1.5 py-0.5 border border-black">
+                                Partial Paid
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs font-bold text-gray-700 mt-0.5">
                             Reason: {debt.description || 'Expense split share'}
@@ -367,11 +371,11 @@ export default function DebtsPage() {
                       <Button
                         variant="brutalSuccess"
                         size="sm"
-                        onClick={() => handleSettleUp(debt.id)}
+                        onClick={() => openSettlementModal(debt, false)}
                         className="gap-1.5 touch-target"
                       >
                         <CheckCircle2 size={14} />
-                        Mark Received
+                        Record Payment
                       </Button>
                     </div>
                   </div>
@@ -381,7 +385,14 @@ export default function DebtsPage() {
           )}
         </div>
       )}
+
+      {/* Interactive Full & Partial Settlement Modal */}
+      <SettlementModal
+        isOpen={Boolean(selectedDebtForSettlement)}
+        onClose={() => setSelectedDebtForSettlement(null)}
+        debt={selectedDebtForSettlement}
+        onSuccess={loadDebts}
+      />
     </div>
   );
-}
 }
