@@ -54,21 +54,29 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      {/* Mobile Drawer Navigation (Slide-over overlay when open) */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex">
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black/50 transition-opacity"
-            onClick={() => setMobileMenuOpen(false)}
-          />
+      {/* Mobile Drawer Navigation (Smooth slide-in overlay) */}
+      <div
+        className={`fixed inset-0 z-50 md:hidden flex transition-all duration-300 ease-in-out ${
+          mobileMenuOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+        }`}
+      >
+        {/* Backdrop */}
+        <div
+          className={`fixed inset-0 bg-black/60 transition-opacity duration-300 ease-in-out ${
+            mobileMenuOpen ? 'opacity-100' : 'opacity-0'
+          }`}
+          onClick={() => setMobileMenuOpen(false)}
+        />
 
-          {/* Drawer sidebar */}
-          <div className="relative w-72 max-w-[85vw] bg-[#F4F1EA] h-full shadow-2xl z-50 overflow-y-auto">
-            <Sidebar onNavigate={() => setMobileMenuOpen(false)} />
-          </div>
+        {/* Drawer sidebar with smooth slide-in/out transform */}
+        <div
+          className={`relative w-72 max-w-[85vw] bg-[#F4F1EA] h-full shadow-[8px_0px_0px_0px_rgba(0,0,0,1)] border-r-4 border-black z-50 overflow-y-auto transform transition-transform duration-300 ease-in-out ${
+            mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          <Sidebar onNavigate={() => setMobileMenuOpen(false)} />
         </div>
-      )}
+      </div>
 
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
