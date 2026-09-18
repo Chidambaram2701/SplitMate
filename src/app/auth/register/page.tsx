@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { Logo } from '@/components/ui/logo';
 import { Home } from 'lucide-react';
 import Link from 'next/link';
 
@@ -138,10 +139,10 @@ function RegisterForm() {
 
   return (
     <div className="space-y-8 text-black">
-      <div className="text-center">
-        <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight border-b-4 border-black pb-3 text-black">
-          SplitMate
-        </h1>
+      <div className="text-center flex flex-col items-center">
+        <div className="border-b-4 border-black pb-3 w-full flex justify-center">
+          <Logo size="lg" showText={true} />
+        </div>
         <p className="mt-2 text-xs font-bold uppercase tracking-widest text-gray-700">
           Shared House Financial Platform
         </p>

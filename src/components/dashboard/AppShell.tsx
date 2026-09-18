@@ -8,6 +8,7 @@ import { HouseSwitcher } from '@/components/dashboard/HouseSwitcher';
 import { UserProfile } from '@/components/dashboard/UserProfile';
 import { ToastContainer } from '@/components/dashboard/ToastContainer';
 import { MobileBottomNav } from '@/components/dashboard/MobileBottomNav';
+import { Logo } from '@/components/ui/logo';
 import { Menu, X } from 'lucide-react';
 import Link from 'next/link';
 
@@ -43,10 +44,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
 
-        <Link href="/dashboard" className="block text-center min-w-0 flex-1">
-          <h1 className="text-base sm:text-xl font-black uppercase tracking-tight text-black truncate">
-            SplitMate
-          </h1>
+        <Link href="/dashboard" className="block text-center min-w-0 flex-1 flex justify-center">
+          <Logo size="sm" showText={true} />
         </Link>
 
         <div className="flex-shrink-0">

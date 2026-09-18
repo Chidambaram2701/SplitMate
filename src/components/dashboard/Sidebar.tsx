@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { House, Users, DollarSign, CreditCard, Box, AlertTriangle, BarChart3, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/ui/logo';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
@@ -40,9 +41,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     <div className="w-full md:w-64 border-r-0 md:border-r-4 border-black bg-[#F4F1EA] flex flex-col h-full text-black flex-shrink-0">
       <div className="p-5 border-b-4 border-black bg-[#F4F1EA]">
         <Link href="/dashboard" onClick={handleClick} className="block">
-          <h1 className="text-2xl font-extrabold uppercase tracking-tight text-black truncate hover:opacity-80 transition-opacity">
-            SplitMate
-          </h1>
+          <Logo size="md" showText={true} />
           <p className="text-[9px] font-bold uppercase tracking-wider text-gray-700 mt-1">
             House Finance Terminal
           </p>
