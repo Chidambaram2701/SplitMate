@@ -459,36 +459,39 @@ export default function NotificationsPage() {
 
             <form onSubmit={handleCreateBroadcast} className="space-y-4">
               <div>
-                <label className="block text-xs font-extrabold uppercase text-black mb-1">
+                <label className="block text-xs font-extrabold uppercase text-black mb-1.5">
                   Alert Category / Type
                 </label>
-                <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                   <button
                     type="button"
                     onClick={() => setAlertType('announcement')}
-                    className={`p-2 border-2 border-black font-extrabold uppercase text-center cursor-pointer ${
-                      alertType === 'announcement' ? 'bg-[#F5E600] text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'bg-white'
+                    className={`p-2 border-2 border-black font-extrabold uppercase flex flex-col sm:flex-row items-center justify-center gap-1 text-[10px] sm:text-xs text-center cursor-pointer transition-all ${
+                      alertType === 'announcement' ? 'bg-[#F5E600] text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'bg-white hover:bg-gray-50'
                     }`}
                   >
-                    📢 Announcement
+                    <span className="text-sm sm:text-base">📢</span>
+                    <span className="truncate">Announcement</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setAlertType('payment')}
-                    className={`p-2 border-2 border-black font-extrabold uppercase text-center cursor-pointer ${
-                      alertType === 'payment' ? 'bg-[#F5E600] text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'bg-white'
+                    className={`p-2 border-2 border-black font-extrabold uppercase flex flex-col sm:flex-row items-center justify-center gap-1 text-[10px] sm:text-xs text-center cursor-pointer transition-all ${
+                      alertType === 'payment' ? 'bg-[#F5E600] text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'bg-white hover:bg-gray-50'
                     }`}
                   >
-                    💰 Payment
+                    <span className="text-sm sm:text-base">💰</span>
+                    <span className="truncate">Payment</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setAlertType('notice')}
-                    className={`p-2 border-2 border-black font-extrabold uppercase text-center cursor-pointer ${
-                      alertType === 'notice' ? 'bg-[#F5E600] text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'bg-white'
+                    className={`p-2 border-2 border-black font-extrabold uppercase flex flex-col sm:flex-row items-center justify-center gap-1 text-[10px] sm:text-xs text-center cursor-pointer transition-all ${
+                      alertType === 'notice' ? 'bg-[#F5E600] text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'bg-white hover:bg-gray-50'
                     }`}
                   >
-                    🧹 Notice
+                    <span className="text-sm sm:text-base">🧹</span>
+                    <span className="truncate">Notice</span>
                   </button>
                 </div>
               </div>
@@ -503,7 +506,7 @@ export default function NotificationsPage() {
                   placeholder="e.g. WiFi Bill Due / House Cleaning"
                   value={alertTitle}
                   onChange={(e) => setAlertTitle(e.target.value)}
-                  className="w-full"
+                  className="w-full text-xs sm:text-sm font-medium"
                 />
               </div>
 
@@ -517,16 +520,16 @@ export default function NotificationsPage() {
                   placeholder="Write message details for your roommates..."
                   value={alertMessage}
                   onChange={(e) => setAlertMessage(e.target.value)}
-                  className="w-full p-2.5 border-2 border-black font-sans text-sm font-medium focus:outline-none focus:bg-[#F5E600]/10"
+                  className="w-full p-2.5 border-2 border-black font-sans text-xs sm:text-sm font-medium focus:outline-none focus:bg-[#F5E600]/10"
                 />
               </div>
 
-              <div className="pt-2 border-t-2 border-black flex items-center justify-end gap-2">
-                <Button type="button" variant="brutal" size="sm" onClick={() => setShowCreateModal(false)}>
+              <div className="pt-3 border-t-2 border-black flex items-center justify-end gap-2">
+                <Button type="button" variant="brutal" size="sm" onClick={() => setShowCreateModal(false)} className="flex-1 sm:flex-none justify-center text-xs">
                   Cancel
                 </Button>
-                <Button type="submit" variant="brutalAccent" size="sm" disabled={submitting} className="gap-1">
-                  <Send size={15} />
+                <Button type="submit" variant="brutalAccent" size="sm" disabled={submitting} className="flex-1 sm:flex-none justify-center gap-1 text-xs px-3">
+                  <Send size={14} />
                   {submitting ? 'Sending...' : 'Broadcast to House'}
                 </Button>
               </div>
