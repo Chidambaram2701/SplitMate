@@ -20,6 +20,14 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata = {
   title: 'SplitMate - House Financial Platform',
   description: 'Shared house financial management and debt settlement for roommates',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
 };
 
 export default function RootLayout({
