@@ -108,8 +108,8 @@ export default function InviteMemberPage() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Join our house on RoommateX!',
-          text: 'Hey! Join our shared house finance workspace on RoommateX:',
+          title: 'Join our house on SplitMate!',
+          text: 'Hey! Join our shared house finance workspace on SplitMate:',
           url: inviteUrl,
         });
       } catch (err) {
@@ -122,9 +122,9 @@ export default function InviteMemberPage() {
 
   const sendEmail = () => {
     if (!inviteUrl || !email) return;
-    const subject = encodeURIComponent('Join our house on RoommateX!');
+    const subject = encodeURIComponent('Join our house on SplitMate!');
     const body = encodeURIComponent(
-      `Hey!\n\nI am inviting you to join our house financial workspace on RoommateX.\n\nClick the link below to sign up and join:\n${inviteUrl}\n\nSee you inside!`
+      `Hey!\n\nI am inviting you to join our house financial workspace on SplitMate.\n\nClick the link below to sign up and join:\n${inviteUrl}\n\nSee you inside!`
     );
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
   };

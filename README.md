@@ -1,4 +1,4 @@
-# RoommateX - House Financial Platform
+# SplitMate - House Financial Platform
 
 A brutalist, production-quality full-stack web application for managing shared house finances for college students.
 

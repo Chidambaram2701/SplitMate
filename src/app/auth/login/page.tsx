@@ -117,7 +117,7 @@ function LoginForm() {
     <div className="space-y-8 text-black">
       <div className="text-center">
         <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight border-b-4 border-black pb-3 text-black">
-          RoommateX
+          SplitMate
         </h1>
         <p className="mt-2 text-xs font-bold uppercase tracking-widest text-gray-700">
           Shared House Financial Platform

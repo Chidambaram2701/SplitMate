@@ -41,7 +41,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       <div className="p-5 border-b-4 border-black bg-[#F4F1EA]">
         <Link href="/dashboard" onClick={handleClick} className="block">
           <h1 className="text-2xl font-extrabold uppercase tracking-tight text-black truncate hover:opacity-80 transition-opacity">
-            RoommateX
+            SplitMate
           </h1>
           <p className="text-[9px] font-bold uppercase tracking-wider text-gray-700 mt-1">
             House Finance Terminal

@@ -45,7 +45,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         <Link href="/dashboard" className="block text-center min-w-0 flex-1">
           <h1 className="text-base sm:text-xl font-black uppercase tracking-tight text-black truncate">
-            RoommateX
+            SplitMate
           </h1>
         </Link>
 

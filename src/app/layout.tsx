@@ -18,8 +18,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata = {
-  title: 'RoommateX - House Financial Platform',
-  description: 'Shared house financial management for college students',
+  title: 'SplitMate - House Financial Platform',
+  description: 'Shared house financial management and debt settlement for roommates',
 };
 
 export default function RootLayout({
