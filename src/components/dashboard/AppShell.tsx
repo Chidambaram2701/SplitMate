@@ -33,23 +33,23 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       {/* Mobile Top Header (visible on mobile < md) */}
-      <div className="flex md:hidden items-center justify-between border-b-4 border-black bg-[#F4F1EA] px-4 py-3 z-30 flex-shrink-0">
+      <div className="flex md:hidden items-center justify-between border-b-4 border-black bg-[#F4F1EA] px-3 py-2.5 z-30 flex-shrink-0 gap-2">
         <button
           type="button"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 border-2 border-black bg-white text-black font-extrabold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px]"
+          className="p-1.5 sm:p-2 border-2 border-black bg-white text-black font-extrabold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] flex-shrink-0"
           aria-label="Toggle navigation menu"
         >
-          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
 
-        <Link href="/dashboard" className="block text-center">
-          <h1 className="text-xl font-extrabold uppercase tracking-tight text-black">
+        <Link href="/dashboard" className="block text-center min-w-0 flex-1">
+          <h1 className="text-base sm:text-xl font-black uppercase tracking-tight text-black truncate">
             RoommateX
           </h1>
         </Link>
 
-        <div className="scale-90 flex-shrink-0">
+        <div className="flex-shrink-0">
           <UserProfile />
         </div>
       </div>
