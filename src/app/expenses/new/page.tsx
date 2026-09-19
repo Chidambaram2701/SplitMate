@@ -314,33 +314,7 @@ export default function CreateExpensePage() {
               </div>
             </div>
 
-            {/* Quick Suggestion Chips */}
-            <div className="space-y-1">
-              <span className="text-[10px] font-extrabold uppercase text-gray-700">Quick Reason Suggestion Chips:</span>
-              <div className="flex flex-wrap gap-1.5 text-xs">
-                {[
-                  { name: 'Rent', cat: 'rent', label: '🏠 Rent' },
-                  { name: 'Groceries', cat: 'groceries', label: '🛒 Groceries' },
-                  { name: 'Electricity Bill', cat: 'utilities', label: '⚡ Electricity' },
-                  { name: 'Water & Gas', cat: 'utilities', label: '💧 Water/Gas' },
-                  { name: 'WiFi / Internet', cat: 'subscriptions', label: '🌐 Internet' },
-                  { name: 'Dinner / Food', cat: 'dining', label: '🍕 Dining' },
-                  { name: 'Maid / Cleaning', cat: 'general', label: '🧹 Cleaning' },
-                ].map((chip) => (
-                  <button
-                    key={chip.name}
-                    type="button"
-                    onClick={() => {
-                      setDescription(chip.name);
-                      setCategory(chip.cat);
-                    }}
-                    className="px-2.5 py-1 text-[11px] font-extrabold uppercase border border-black bg-[#F4F1EA] hover:bg-[#F5E600] transition-colors cursor-pointer"
-                  >
-                    {chip.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
