@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, Home, User } from 'lucide-react';
+import { Plus, Trash2, Home } from 'lucide-react';
 import Link from 'next/link';
 
 export default function MembersPage() {

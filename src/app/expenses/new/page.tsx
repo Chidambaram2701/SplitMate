@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Check, DollarSign, Home, Plus } from 'lucide-react';
+import { Check, DollarSign, Plus } from 'lucide-react';
 import Link from 'next/link';
 
 interface Member {

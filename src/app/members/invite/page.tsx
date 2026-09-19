@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { UserPlus, ArrowLeft, Copy, Mail, Check, Share2 } from 'lucide-react';
+import { ArrowLeft, Copy, Mail, Check, Share2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function InviteMemberPage() {
