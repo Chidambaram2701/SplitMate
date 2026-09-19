@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase/client';
 import { MoneyDisplay } from '@/components/ui/money-display';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, Home, Search, Filter, Receipt, Pencil, X, Check, Save } from 'lucide-react';
+import { Plus, Trash2, Home, Search, Filter, Receipt, Pencil, X, Save } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ExpensesPage() {

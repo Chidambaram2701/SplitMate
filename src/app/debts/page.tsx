@@ -6,7 +6,7 @@ import { MoneyDisplay } from '@/components/ui/money-display';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Button } from '@/components/ui/button';
 import { SettlementModal } from '@/components/settlements/SettlementModal';
-import { Plus, AlertTriangle, Home, ArrowUpRight, ArrowDownRight, CheckCircle2, DollarSign } from 'lucide-react';
+import { Plus, ArrowUpRight, ArrowDownRight, CheckCircle2, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DebtsPage() {

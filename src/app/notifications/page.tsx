@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { Bell, Plus, CheckCircle2, AlertTriangle, Info, Megaphone, Trash2, ShieldAlert, X, Send } from 'lucide-react';
+import { Bell, Plus, CheckCircle2, Info, Megaphone, Trash2, X, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import Link from 'next/link';
 
 interface NotificationItem {
   id: string;
