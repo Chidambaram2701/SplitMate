@@ -310,6 +310,7 @@ export default function CreateExpensePage() {
                   <option value="rent">RENT</option>
                   <option value="dining">DINING</option>
                   <option value="subscriptions">INTERNET / SUBSCRIPTIONS</option>
+                  <option value="other">OTHER</option>
                 </select>
               </div>
             </div>

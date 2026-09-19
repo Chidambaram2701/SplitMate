@@ -267,7 +267,7 @@ export default function ExpensesPage() {
 
           <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
             <Filter size={14} className="flex-shrink-0 text-black ml-1" />
-            {['all', 'general', 'groceries', 'utilities', 'rent', 'dining'].map((cat) => (
+            {['all', 'general', 'groceries', 'utilities', 'rent', 'dining', 'subscriptions', 'other'].map((cat) => (
               <button
                 key={cat}
                 type="button"
@@ -436,11 +436,13 @@ export default function ExpensesPage() {
                   onChange={(e) => setEditCategory(e.target.value)}
                   className="w-full p-2.5 border-2 border-black bg-white font-extrabold text-xs uppercase focus:outline-none focus:bg-[#F5E600]/20"
                 >
-                  <option value="general">General</option>
-                  <option value="groceries">Groceries</option>
-                  <option value="utilities">Utilities</option>
-                  <option value="rent">Rent</option>
-                  <option value="dining">Dining</option>
+                  <option value="general">GENERAL</option>
+                  <option value="groceries">GROCERIES</option>
+                  <option value="utilities">UTILITIES</option>
+                  <option value="rent">RENT</option>
+                  <option value="dining">DINING</option>
+                  <option value="subscriptions">INTERNET / SUBSCRIPTIONS</option>
+                  <option value="other">OTHER</option>
                 </select>
               </div>
 
