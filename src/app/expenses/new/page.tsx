@@ -18,6 +18,7 @@ interface Member {
 export default function CreateExpensePage() {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
+  const [category, setCategory] = useState('general');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -192,7 +193,7 @@ export default function CreateExpensePage() {
           paid_by: user.id,
           description: description.trim(),
           total_amount: expenseAmount,
-          category: 'general',
+          category: category || 'general',
           date: date || new Date().toISOString().split('T')[0],
         })
         .select()
@@ -277,19 +278,68 @@ export default function CreateExpensePage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="description" required>
-                Expense Name / Reason
-              </Label>
-              <Input
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="e.g. Groceries, Electricity Bill"
-                required
-                disabled={loading}
-                className="mt-1"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="sm:col-span-2">
+                <Label htmlFor="description" required>
+                  Expense Name / Reason
+                </Label>
+                <Input
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="e.g. Groceries, Electricity Bill, Rent"
+                  required
+                  disabled={loading}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="category">
+                  Category
+                </Label>
+                <select
+                  id="category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  disabled={loading}
+                  className="w-full mt-1 p-2.5 border-2 border-black bg-[#F5E600]/20 font-extrabold text-xs sm:text-sm uppercase focus:outline-none focus:bg-[#F5E600]/40 cursor-pointer h-[42px]"
+                >
+                  <option value="general">GENERAL</option>
+                  <option value="groceries">GROCERIES</option>
+                  <option value="utilities">UTILITIES</option>
+                  <option value="rent">RENT</option>
+                  <option value="dining">DINING</option>
+                  <option value="subscriptions">INTERNET / SUBSCRIPTIONS</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Quick Suggestion Chips */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-extrabold uppercase text-gray-700">Quick Reason Suggestion Chips:</span>
+              <div className="flex flex-wrap gap-1.5 text-xs">
+                {[
+                  { name: 'Rent', cat: 'rent', label: '🏠 Rent' },
+                  { name: 'Groceries', cat: 'groceries', label: '🛒 Groceries' },
+                  { name: 'Electricity Bill', cat: 'utilities', label: '⚡ Electricity' },
+                  { name: 'Water & Gas', cat: 'utilities', label: '💧 Water/Gas' },
+                  { name: 'WiFi / Internet', cat: 'subscriptions', label: '🌐 Internet' },
+                  { name: 'Dinner / Food', cat: 'dining', label: '🍕 Dining' },
+                  { name: 'Maid / Cleaning', cat: 'general', label: '🧹 Cleaning' },
+                ].map((chip) => (
+                  <button
+                    key={chip.name}
+                    type="button"
+                    onClick={() => {
+                      setDescription(chip.name);
+                      setCategory(chip.cat);
+                    }}
+                    className="px-2.5 py-1 text-[11px] font-extrabold uppercase border border-black bg-[#F4F1EA] hover:bg-[#F5E600] transition-colors cursor-pointer"
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
