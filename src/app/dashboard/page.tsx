@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase/client';
 import { MoneyDisplay } from '@/components/ui/money-display';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Button } from '@/components/ui/button';
-import { Plus, DollarSign, ArrowUpRight, ArrowDownRight, Home, Users } from 'lucide-react';
+import { Plus, DollarSign, ArrowUpRight, ArrowDownRight, Home, Users, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardPage() {

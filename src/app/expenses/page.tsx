@@ -78,7 +78,7 @@ export default function ExpensesPage() {
           .select('id, display_name, email')
           .in('id', paidByIds);
 
-        const profilesMap = new Map((profilesData || []).map((p: any) => [p.id, p]));
+        const profilesMap = new Map<string, any>((profilesData || []).map((p: any) => [p.id, p]));
 
         const enrichedExpenses = expensesData.map((e: any) => {
           const prof = profilesMap.get(e.paid_by);
