@@ -47,7 +47,7 @@ export function HouseSwitcher() {
         setHouses(housesList);
 
         const savedHouseId = sessionStorage.getItem('currentHouseId');
-        const activeId = savedHouseId && housesList.some(h => h.id === savedHouseId)
+        const activeId = savedHouseId && housesList.some((h: any) => h.id === savedHouseId)
           ? savedHouseId
           : housesList[0].id;
 

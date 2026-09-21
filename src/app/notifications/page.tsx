@@ -37,7 +37,7 @@ export default function NotificationsPage() {
     loadNotifications();
 
     let channel: ReturnType<typeof supabase.channel> | null = null;
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(({ data: { user } }: any) => {
       if (user) {
         channel = supabase
           .channel(`notifications_realtime_${user.id}`)
@@ -49,7 +49,7 @@ export default function NotificationsPage() {
               table: 'notifications',
               filter: `user_id=eq.${user.id}`,
             },
-            (payload) => {
+            (payload: any) => {
               const newNotif = payload.new as any;
               setNotifications((prev) => {
                 if (prev.some((item) => item.id === newNotif.id)) return prev;
@@ -140,7 +140,7 @@ export default function NotificationsPage() {
         console.warn('Local alerts read warning:', e);
       }
 
-      const dbItems: NotificationItem[] = (notifData || []).map((n) => ({
+      const dbItems: NotificationItem[] = (notifData || []).map((n: any) => ({
         id: n.id,
         user_id: n.user_id,
         type: (n.type as any) || 'notice',
@@ -221,7 +221,7 @@ export default function NotificationsPage() {
 
       // Insert notification in Supabase for each member (triggers Supabase Realtime for all connected housemates)
       if (memberList.length > 0) {
-        const notifInserts = memberList.map((m) => ({
+        const notifInserts = memberList.map((m: any) => ({
           user_id: m.user_id,
           type: alertType,
           title: `📢 ${alertTitle.trim()} (From ${currentUserName})`,

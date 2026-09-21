@@ -50,18 +50,20 @@ export default function CreateExpensePage() {
           .eq('status', 'active')
           .limit(1);
 
-        if (memberRows && memberRows.length > 0) {
-          houseId = memberRows[0].house_id;
-          sessionStorage.setItem('currentHouseId', houseId);
+        if (memberRows && memberRows.length > 0 && memberRows[0]?.house_id) {
+          const hid = memberRows[0].house_id;
+          houseId = hid;
+          sessionStorage.setItem('currentHouseId', hid);
         } else {
           const { data: houseRows } = await supabase
             .from('houses')
             .select('id')
             .limit(1);
 
-          if (houseRows && houseRows.length > 0) {
-            houseId = houseRows[0].id;
-            sessionStorage.setItem('currentHouseId', houseId);
+          if (houseRows && houseRows.length > 0 && houseRows[0]?.id) {
+            const hid = houseRows[0].id;
+            houseId = hid;
+            sessionStorage.setItem('currentHouseId', hid);
           }
         }
       }
@@ -153,14 +155,16 @@ export default function CreateExpensePage() {
         .eq('status', 'active')
         .limit(1);
 
-      if (memberRows && memberRows.length > 0) {
-        houseId = memberRows[0].house_id;
-        sessionStorage.setItem('currentHouseId', houseId);
+      if (memberRows && memberRows.length > 0 && memberRows[0]?.house_id) {
+        const hid = memberRows[0].house_id;
+        houseId = hid;
+        sessionStorage.setItem('currentHouseId', hid);
       } else {
         const { data: houseRows } = await supabase.from('houses').select('id').limit(1);
-        if (houseRows && houseRows.length > 0) {
-          houseId = houseRows[0].id;
-          sessionStorage.setItem('currentHouseId', houseId);
+        if (houseRows && houseRows.length > 0 && houseRows[0]?.id) {
+          const hid = houseRows[0].id;
+          houseId = hid;
+          sessionStorage.setItem('currentHouseId', hid);
         }
       }
     }

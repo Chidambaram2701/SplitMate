@@ -42,9 +42,10 @@ export default function CreateDebtPage() {
       let houseId = sessionStorage.getItem('currentHouseId');
       if (!houseId) {
         const { data: houseRows } = await supabase.from('houses').select('id').limit(1);
-        if (houseRows && houseRows.length > 0) {
-          houseId = houseRows[0].id;
-          sessionStorage.setItem('currentHouseId', houseId);
+        const targetId = houseRows[0]?.id;
+        if (targetId) {
+          houseId = targetId;
+          sessionStorage.setItem('currentHouseId', targetId);
         }
       }
 
@@ -108,8 +109,11 @@ export default function CreateDebtPage() {
     if (!houseId) {
       const { data: houseRows } = await supabase.from('houses').select('id').limit(1);
       if (houseRows && houseRows.length > 0) {
-        houseId = houseRows[0].id;
-        sessionStorage.setItem('currentHouseId', houseId);
+        const targetId = houseRows[0]?.id;
+        if (targetId) {
+          houseId = targetId;
+          sessionStorage.setItem('currentHouseId', targetId);
+        }
       }
     }
 

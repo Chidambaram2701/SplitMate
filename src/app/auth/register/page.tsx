@@ -33,7 +33,7 @@ function RegisterForm() {
         .select('name')
         .eq('id', inviteHouseId)
         .maybeSingle()
-        .then(({ data }) => {
+        .then(({ data }: { data: any }) => {
           if (data?.name) setHouseName(data.name);
         });
     }

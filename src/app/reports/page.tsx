@@ -35,14 +35,16 @@ export default function ReportsPage() {
           .eq('status', 'active')
           .limit(1);
 
-        if (memberRows && memberRows.length > 0) {
-          houseId = memberRows[0].house_id;
-          sessionStorage.setItem('currentHouseId', houseId);
+        if (memberRows && memberRows.length > 0 && memberRows[0]?.house_id) {
+          const hid = memberRows[0].house_id;
+          houseId = hid;
+          sessionStorage.setItem('currentHouseId', hid);
         } else {
           const { data: houseRows } = await supabase.from('houses').select('id').limit(1);
-          if (houseRows && houseRows.length > 0) {
-            houseId = houseRows[0].id;
-            sessionStorage.setItem('currentHouseId', houseId);
+          if (houseRows && houseRows.length > 0 && houseRows[0]?.id) {
+            const hid = houseRows[0].id;
+            houseId = hid;
+            sessionStorage.setItem('currentHouseId', hid);
           }
         }
       }
@@ -58,7 +60,7 @@ export default function ReportsPage() {
       const { data: profiles } = await supabase.from('profiles').select('id, display_name, email');
       const profileMap = new Map<string, string>();
       if (profiles) {
-        profiles.forEach((p) => {
+        profiles.forEach((p: any) => {
           profileMap.set(p.id, p.display_name || p.email?.split('@')[0] || 'Roommate');
         });
       }
@@ -73,12 +75,12 @@ export default function ReportsPage() {
       const expensesList = expensesData || [];
       setRawExpenses(expensesList);
 
-      const grandTotal = expensesList.reduce((acc, curr) => acc + Number(curr.total_amount || 0), 0);
+      const grandTotal = expensesList.reduce((acc: number, curr: any) => acc + Number(curr.total_amount || 0), 0);
       setTotalExpenditure(grandTotal);
 
       // Category Distribution
       const catMap: Record<string, number> = {};
-      expensesList.forEach((exp) => {
+      expensesList.forEach((exp: any) => {
         const cat = exp.category ? exp.category.toUpperCase() : 'GENERAL';
         catMap[cat] = (catMap[cat] || 0) + Number(exp.total_amount || 0);
       });
@@ -93,7 +95,7 @@ export default function ReportsPage() {
 
       // Member Spend Breakdown
       const memberMap: Record<string, number> = {};
-      expensesList.forEach((exp) => {
+      expensesList.forEach((exp: any) => {
         const name = profileMap.get(exp.paid_by) || 'Unknown Roommate';
         memberMap[name] = (memberMap[name] || 0) + Number(exp.total_amount || 0);
       });
@@ -117,7 +119,7 @@ export default function ReportsPage() {
       let totalRemainingDebts = 0;
       let settledCount = 0;
 
-      debtsList.forEach((d) => {
+      debtsList.forEach((d: any) => {
         const orig = Number(d.original_amount || 0);
         const rem = Number(d.remaining_amount || 0);
         totalOriginalDebts += orig;
