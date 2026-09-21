@@ -90,7 +90,7 @@ function LoginForm() {
 
           if (existingMembership?.house_id) {
             targetHouseId = existingMembership.house_id;
-            sessionStorage.setItem('currentHouseId', targetHouseId);
+            sessionStorage.setItem('currentHouseId', existingMembership.house_id);
           }
         }
 
@@ -106,7 +106,7 @@ function LoginForm() {
               joined_at: new Date().toISOString(),
             }, { onConflict: 'house_id,user_id' });
 
-          if (!memberError) {
+          if (!memberError && targetHouseId) {
             sessionStorage.setItem('currentHouseId', targetHouseId);
 
             await supabase

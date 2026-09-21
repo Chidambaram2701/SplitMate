@@ -1,13 +1,12 @@
 // Supabase Client for RoommateX
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database';
+import { createClient } from '@supabase/supabase-js';
 
 // Supabase environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
 
 // Create a mock Supabase client for build time when config is missing
-function createMockSupabase(): SupabaseClient<Database> {
+function createMockSupabase(): any {
   return {
     auth: {
       getUser: async () => ({ data: { user: null }, error: null }),
@@ -22,13 +21,19 @@ function createMockSupabase(): SupabaseClient<Database> {
         }),
       }),
     }),
-  } as unknown as SupabaseClient<Database>;
+    channel: () => ({
+      on: () => ({
+        subscribe: () => {},
+      }),
+    }),
+    removeChannel: () => {},
+  };
 }
 
 // Create Supabase client instance
-let supabaseInstance: SupabaseClient<Database> | null = null;
+let supabaseInstance: any = null;
 
-function getSupabaseClient(): SupabaseClient<Database> {
+function getSupabaseClient(): any {
   if (supabaseInstance) {
     return supabaseInstance;
   }
@@ -39,7 +44,7 @@ function getSupabaseClient(): SupabaseClient<Database> {
     return supabaseInstance;
   }
 
-  supabaseInstance = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
@@ -58,7 +63,7 @@ function getSupabaseClient(): SupabaseClient<Database> {
   return supabaseInstance;
 }
 
-export const supabase = getSupabaseClient();
+export const supabase: any = getSupabaseClient();
 
 export async function getCurrentHouseId(): Promise<string | null> {
   if (!supabase) return null;
