@@ -24,6 +24,7 @@ export default function CreateExpensePage() {
   const [loading, setLoading] = useState(false);
   const [fetchingMembers, setFetchingMembers] = useState(true);
   const [members, setMembers] = useState<Member[]>([]);
+  const [createDebts, setCreateDebts] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
@@ -221,24 +222,26 @@ export default function CreateExpensePage() {
         }
       }
 
-      for (const memberUserId of selectedMembers) {
-        if (memberUserId !== user.id) {
-          const { error: debtError } = await supabase
-            .from('debts')
-            .insert({
-              house_id: houseId,
-              debtor_id: memberUserId,
-              creditor_id: user.id,
-              original_amount: splitAmount,
-              remaining_amount: splitAmount,
-              due_date: null,
-              description: `Share of ${description.trim()}`,
-              status: 'pending',
-            });
+      if (createDebts) {
+        for (const memberUserId of selectedMembers) {
+          if (memberUserId !== user.id) {
+            const { error: debtError } = await supabase
+              .from('debts')
+              .insert({
+                house_id: houseId,
+                debtor_id: memberUserId,
+                creditor_id: user.id,
+                original_amount: splitAmount,
+                remaining_amount: splitAmount,
+                due_date: null,
+                description: `Share of ${description.trim()}`,
+                status: 'pending',
+              });
 
-          if (debtError) {
-            console.error('Debt insert error:', debtError);
-            throw new Error(`Failed to record debt balance: ${debtError.message}`);
+            if (debtError) {
+              console.error('Debt insert error:', debtError);
+              throw new Error(`Failed to record debt balance: ${debtError.message}`);
+            }
           }
         }
       }
@@ -420,6 +423,23 @@ export default function CreateExpensePage() {
                 })}
               </div>
             )}
+
+            <div className="pt-4 border-t-2 border-black flex items-center justify-between">
+              <div>
+                <span className="font-extrabold text-xs sm:text-sm uppercase block text-black">
+                  Automatically Create Debt Balances
+                </span>
+                <span className="text-[11px] text-gray-600 block">
+                  Uncheck if members already paid or settled their share offline
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={createDebts}
+                onChange={(e) => setCreateDebts(e.target.checked)}
+                className="w-5 h-5 accent-black border-2 border-black cursor-pointer"
+              />
+            </div>
           </div>
 
           {amount && selectedMembers.length > 0 && (

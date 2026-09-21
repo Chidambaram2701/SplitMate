@@ -1,12 +1,13 @@
 // Supabase Client for RoommateX
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
 // Supabase environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
 
 // Create a mock Supabase client for build time when config is missing
-function createMockSupabase() {
+function createMockSupabase(): SupabaseClient<Database> {
   return {
     auth: {
       getUser: async () => ({ data: { user: null }, error: null }),
@@ -21,13 +22,13 @@ function createMockSupabase() {
         }),
       }),
     }),
-  };
+  } as unknown as SupabaseClient<Database>;
 }
 
 // Create Supabase client instance
-let supabaseInstance: any = null;
+let supabaseInstance: SupabaseClient<Database> | null = null;
 
-function getSupabaseClient() {
+function getSupabaseClient(): SupabaseClient<Database> {
   if (supabaseInstance) {
     return supabaseInstance;
   }
@@ -38,7 +39,7 @@ function getSupabaseClient() {
     return supabaseInstance;
   }
 
-  supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+  supabaseInstance = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,

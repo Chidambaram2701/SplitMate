@@ -35,6 +35,48 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     loadNotifications();
+
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        channel = supabase
+          .channel(`notifications_realtime_${user.id}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'notifications',
+              filter: `user_id=eq.${user.id}`,
+            },
+            (payload) => {
+              const newNotif = payload.new as any;
+              setNotifications((prev) => {
+                if (prev.some((item) => item.id === newNotif.id)) return prev;
+                return [
+                  {
+                    id: newNotif.id,
+                    user_id: newNotif.user_id,
+                    type: newNotif.type || 'notice',
+                    title: newNotif.title,
+                    message: newNotif.message,
+                    read: newNotif.read || false,
+                    created_at: newNotif.created_at,
+                  },
+                  ...prev,
+                ];
+              });
+            }
+          )
+          .subscribe();
+      }
+    });
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, []);
 
   async function loadNotifications() {
@@ -177,7 +219,7 @@ export default function NotificationsPage() {
         created_at: createdAt,
       };
 
-      // 1. Insert notification in Supabase for each member
+      // Insert notification in Supabase for each member (triggers Supabase Realtime for all connected housemates)
       if (memberList.length > 0) {
         const notifInserts = memberList.map((m) => ({
           user_id: m.user_id,
@@ -191,20 +233,7 @@ export default function NotificationsPage() {
         await supabase.from('notifications').insert(notifInserts);
       }
 
-      // 2. Also save to house local storage broadcast pool for instant visibility
-      const localAlertsKey = `splitmate_house_alerts_${activeHouseId}`;
-      let localAlerts: NotificationItem[] = [];
-      try {
-        const saved = localStorage.getItem(localAlertsKey);
-        if (saved) localAlerts = JSON.parse(saved);
-      } catch (e) {
-        // ignore
-      }
-
-      localAlerts.unshift(newAlertItem);
-      localStorage.setItem(localAlertsKey, JSON.stringify(localAlerts.slice(0, 30)));
-
-      // Update state
+      // Optimistically update current user UI state
       setNotifications((prev) => [newAlertItem, ...prev]);
 
       // Reset form & close modal

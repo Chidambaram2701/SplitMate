@@ -78,7 +78,23 @@ function LoginForm() {
           }
         }
 
-        // Add user to house_members if there is a target house
+        // Fallback: Check if user is already an active member of any house
+        if (!targetHouseId) {
+          const { data: existingMembership } = await supabase
+            .from('house_members')
+            .select('house_id')
+            .eq('user_id', user.id)
+            .eq('status', 'active')
+            .limit(1)
+            .maybeSingle();
+
+          if (existingMembership?.house_id) {
+            targetHouseId = existingMembership.house_id;
+            sessionStorage.setItem('currentHouseId', targetHouseId);
+          }
+        }
+
+        // Add user to house_members if there is a target house from invite
         if (targetHouseId) {
           const { error: memberError } = await supabase
             .from('house_members')
